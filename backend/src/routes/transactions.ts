@@ -1,6 +1,7 @@
 import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { checkAlerts } from '../services/alertChecker';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -57,6 +58,11 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
       date: date ? new Date(date) : new Date(),
     },
   });
+
+  // Check budget alerts (fire-and-forget, no bloquear la respuesta)
+  checkAlerts(req.userId!, category).catch((e) =>
+    console.error('[alerts] Error chequeando alertas:', e)
+  );
 
   res.status(201).json(tx);
 });
