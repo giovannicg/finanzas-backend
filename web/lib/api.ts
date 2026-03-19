@@ -18,7 +18,12 @@ async function request<T>(
     (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  } catch {
+    throw new Error(`No se pudo conectar al servidor (${BASE_URL}). Verifica que el backend esté corriendo.`);
+  }
 
   if (res.status === 401) {
     if (typeof window !== "undefined") {
@@ -29,8 +34,16 @@ async function request<T>(
   }
 
   if (!res.ok) {
-    const body = await res.text();
-    throw new Error(body || res.statusText);
+    let message: string;
+    const contentType = res.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      const json = await res.json().catch(() => ({}));
+      message = json.error ?? json.message ?? res.statusText;
+    } else {
+      // Evita tirar HTML crudo como mensaje de error
+      message = `Error ${res.status}: ${res.statusText || "respuesta inesperada del servidor"}`;
+    }
+    throw new Error(message);
   }
 
   if (res.status === 204) return undefined as T;
