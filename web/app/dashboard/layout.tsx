@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { clearToken } from "@/lib/auth";
 
 const navItems = [
@@ -13,11 +13,10 @@ const navItems = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
 
   function logout() {
     clearToken();
-    router.push("/login");
+    window.location.href = "/login";
   }
 
   return (

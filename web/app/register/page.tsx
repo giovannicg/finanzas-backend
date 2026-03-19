@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/api";
 import { saveToken } from "@/lib/auth";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,7 +19,7 @@ export default function RegisterPage() {
     try {
       const res = await auth.register(name, email, password);
       saveToken(res.token);
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error al registrarse");
     } finally {
