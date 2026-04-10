@@ -73,7 +73,7 @@ function Modal({
               <input
                 type="text"
                 maxLength={4}
-                pattern="[0-9]{4}"
+                pattern="[0-9]{3,4}"
                 value={last4}
                 onChange={(e) => setLast4(e.target.value)}
                 className="w-full rounded-lg bg-gray-800 px-3 py-2 text-sm text-white outline-none ring-1 ring-gray-700 focus:ring-indigo-500"

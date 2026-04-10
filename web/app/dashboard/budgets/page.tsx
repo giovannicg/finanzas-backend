@@ -15,8 +15,8 @@ function BudgetModal({
   onClose: () => void;
   onSave: () => void;
 }) {
-  const [categoryId, setCategoryId] = useState(editing?.categoryId ?? cats[0]?.id ?? 0);
-  const [threshold, setThreshold] = useState(String(editing?.threshold ?? ""));
+  const [category, setCategory] = useState(editing?.category ?? cats[0]?.name ?? "");
+  const [limitAmount, setLimitAmount] = useState(String(editing?.limitAmount ?? ""));
   const [period, setPeriod] = useState<"monthly" | "weekly">(editing?.period ?? "monthly");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -27,9 +27,9 @@ function BudgetModal({
     setLoading(true);
     try {
       if (editing) {
-        await alerts.update(editing.id, { threshold: parseFloat(threshold), period });
+        await alerts.update(editing.id, { limitAmount: parseFloat(limitAmount), period });
       } else {
-        await alerts.create({ categoryId, threshold: parseFloat(threshold), period });
+        await alerts.create({ category, limitAmount: parseFloat(limitAmount), period });
       }
       onSave();
       onClose();
@@ -59,11 +59,11 @@ function BudgetModal({
             <div>
               <label className="mb-1 block text-xs font-medium text-gray-400">Categoría</label>
               <select
-                value={categoryId}
-                onChange={(e) => setCategoryId(Number(e.target.value))}
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
                 className="w-full rounded-lg bg-gray-800 px-3 py-2 text-sm text-white outline-none ring-1 ring-gray-700 focus:ring-indigo-500"
               >
-                {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {cats.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
             </div>
           )}
@@ -75,8 +75,8 @@ function BudgetModal({
               step="0.01"
               min="1"
               required
-              value={threshold}
-              onChange={(e) => setThreshold(e.target.value)}
+              value={limitAmount}
+              onChange={(e) => setLimitAmount(e.target.value)}
               className="w-full rounded-lg bg-gray-800 px-3 py-2 text-sm text-white outline-none ring-1 ring-gray-700 focus:ring-indigo-500"
               placeholder="0.00"
             />
@@ -138,7 +138,7 @@ export default function BudgetsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  async function handleDelete(id: number) {
+  async function handleDelete(id: string) {
     if (!confirm("¿Eliminar este presupuesto?")) return;
     await alerts.remove(id);
     load();

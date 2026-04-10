@@ -17,11 +17,11 @@ const AMOUNT_PATTERNS = [
 ];
 
 const CARD_LAST4_PATTERNS = [
-  /tarjeta[:\s]*[*x]+(\d{4})/i,
-  /card[:\s]*[*x]+(\d{4})/i,
-  /\*{2,}(\d{4})/,
-  /terminaci[oó]n[:\s]*(\d{4})/i,
-  /term[.\s]*(\d{4})/i,
+  /tarjeta[:\s]*[*x]+(\d{3,4})/i,
+  /card[:\s]*[*x]+(\d{3,4})/i,
+  /\*{2,}(\d{3,4})/,
+  /terminaci[oó]n[:\s]*(\d{3,4})/i,
+  /term[.\s]*(\d{3,4})/i,
 ];
 
 const MERCHANT_PATTERNS = [

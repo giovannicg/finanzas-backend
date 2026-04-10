@@ -142,11 +142,11 @@ export const categories = {
 // ── Alerts / Budgets ──────────────────────────────────────────────────────────
 
 export interface Alert {
-  id: number;
-  categoryId: number;
-  category: { id: number; name: string; color: string };
-  threshold: number;
+  id: string;
+  category: string;
+  limitAmount: number;
   period: "monthly" | "weekly";
+  active: boolean;
   currentSpend: number;
   percentage: number;
 }
@@ -154,8 +154,8 @@ export interface Alert {
 export const alerts = {
   list: () => request<Alert[]>("/api/alerts"),
   create: (data: {
-    categoryId: number;
-    threshold: number;
+    category: string;
+    limitAmount: number;
     period: "monthly" | "weekly";
   }) =>
     request<Alert>("/api/alerts", {
@@ -163,13 +163,13 @@ export const alerts = {
       body: JSON.stringify(data),
     }),
   update: (
-    id: number,
-    data: Partial<{ threshold: number; period: "monthly" | "weekly" }>
+    id: string,
+    data: Partial<{ limitAmount: number; period: "monthly" | "weekly" }>
   ) =>
     request<Alert>(`/api/alerts/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
-  remove: (id: number) =>
+  remove: (id: string) =>
     request<void>(`/api/alerts/${id}`, { method: "DELETE" }),
 };
