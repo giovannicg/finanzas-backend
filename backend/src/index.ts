@@ -9,12 +9,15 @@ import alertsRouter from './routes/alerts';
 import categoriesRouter from './routes/categories';
 import usersRouter from './routes/users';
 import webhookRouter from './routes/webhook';
+import logsRouter from './routes/logs';
+import { requestLogger } from './middleware/requestLogger';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use(requestLogger);
 app.use(express.urlencoded({ extended: true }));
 
 // SendGrid Inbound Parse sends multipart/form-data
@@ -26,6 +29,7 @@ app.use('/api/transactions', transactionsRouter);
 app.use('/api/alerts', alertsRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/logs', logsRouter);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 

@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { checkAlerts } from '../services/alertChecker';
+import { writeLog } from '../services/logger';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -64,6 +65,14 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
     console.error('[alerts] Error chequeando alertas:', e)
   );
 
+  writeLog({
+    type: 'TRANSACTION',
+    level: 'INFO',
+    userId: req.userId,
+    message: `Transacción creada: ${merchant} $${amount}`,
+    meta: { transactionId: tx.id, merchant, amount, category },
+  }).catch(() => {});
+
   res.status(201).json(tx);
 });
 
@@ -124,6 +133,15 @@ router.delete('/:id', async (req: AuthRequest, res: Response): Promise<void> => 
   }
 
   await prisma.transaction.delete({ where: { id: req.params.id } });
+
+  writeLog({
+    type: 'TRANSACTION',
+    level: 'WARN',
+    userId: req.userId,
+    message: `Transacción eliminada: ${tx.merchant} $${tx.amount}`,
+    meta: { transactionId: tx.id, merchant: tx.merchant, amount: tx.amount },
+  }).catch(() => {});
+
   res.status(204).send();
 });
 

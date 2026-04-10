@@ -27,10 +27,14 @@ async function request<T>(
 
   if (res.status === 401) {
     if (typeof window !== "undefined") {
-      localStorage.removeItem("token");
-      window.location.href = "/login";
+      const onAuthPage = window.location.pathname.startsWith("/login") ||
+        window.location.pathname.startsWith("/register");
+      if (!onAuthPage) {
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+      }
     }
-    throw new Error("Unauthorized");
+    throw new Error("Credenciales inválidas");
   }
 
   if (!res.ok) {

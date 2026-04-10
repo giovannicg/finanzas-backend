@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaClient } from '@prisma/client';
+import { writeLog } from '../services/logger';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -55,17 +56,21 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
+    writeLog({ type: 'AUTH', level: 'WARN', message: `Login fallido: email no encontrado (${email})`, meta: { email } }).catch(() => {});
     res.status(401).json({ error: 'Credenciales inválidas' });
     return;
   }
 
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) {
+    writeLog({ type: 'AUTH', level: 'WARN', userId: user.id, message: `Login fallido: contraseña incorrecta (${email})`, meta: { email } }).catch(() => {});
     res.status(401).json({ error: 'Credenciales inválidas' });
     return;
   }
 
   const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '30d' });
+
+  writeLog({ type: 'AUTH', level: 'INFO', userId: user.id, message: `Login exitoso (${email})`, meta: { email } }).catch(() => {});
 
   res.json({
     token,

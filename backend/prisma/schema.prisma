@@ -60,3 +60,22 @@ model Category {
   @@unique([userId, name])
   @@index([userId])
 }
+
+model Log {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  type      String   // "AUTH" | "TRANSACTION" | "REQUEST" | "ERROR"
+  level     String   @default("INFO") // "INFO" | "WARN" | "ERROR"
+  userId    String?
+  method    String?
+  path      String?
+  status    Int?
+  duration  Int?
+  message   String
+  meta      Json?
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([type])
+  @@index([level])
+}
