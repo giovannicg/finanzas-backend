@@ -87,6 +87,7 @@ router.get('/summary', async (req: AuthRequest, res: Response): Promise<void> =>
   const start = new Date(y, m - 1, 1);
   const end = new Date(y, m, 1);
 
+  // Category breakdown for the selected month
   const rows = await prisma.transaction.groupBy({
     by: ['category'],
     where: { userId: req.userId, date: { gte: start, lt: end } },
@@ -95,16 +96,52 @@ router.get('/summary', async (req: AuthRequest, res: Response): Promise<void> =>
     orderBy: { _sum: { amount: 'desc' } },
   });
 
-  const totalMonth = rows.reduce((acc, r) => acc + (r._sum.amount ?? 0), 0);
+  const totalSpent = rows.reduce((acc, r) => acc + (r._sum.amount ?? 0), 0);
+  const transactionCount = rows.reduce((acc, r) => acc + r._count.id, 0);
+  const topCategory = rows[0]?.category ?? null;
 
-  const summary = rows.map((r) => ({
+  // Colors from custom categories
+  const customCats = await prisma.category.findMany({ where: { userId: req.userId } });
+  const colorMap = new Map(customCats.map((c) => [c.name, c.color]));
+
+  const DEFAULT_COLORS: Record<string, string> = {
+    Comida: '#f97316', Transporte: '#3b82f6', Entretenimiento: '#a855f7',
+    Salud: '#22c55e', Supermercado: '#eab308', Ropa: '#ec4899',
+    Servicios: '#06b6d4', Educación: '#f43f5e', Viajes: '#14b8a6', Otros: '#64748b',
+  };
+
+  const byCategory = rows.map((r) => ({
     category: r.category,
+    color: colorMap.get(r.category) ?? DEFAULT_COLORS[r.category] ?? '#64748b',
     total: r._sum.amount ?? 0,
-    count: r._count.id,
-    percentage: totalMonth > 0 ? ((r._sum.amount ?? 0) / totalMonth) * 100 : 0,
   }));
 
-  res.json({ summary, totalMonth, year: y, month: m });
+  // Alerts triggered (>=80% of limit)
+  const alerts = await prisma.alert.findMany({ where: { userId: req.userId, active: true } });
+  let alertsTriggered = 0;
+  for (const alert of alerts) {
+    const row = rows.find((r) => r.category === alert.category);
+    const spent = row?._sum.amount ?? 0;
+    if (alert.limitAmount > 0 && spent / alert.limitAmount >= 0.8) alertsTriggered++;
+  }
+
+  // 6-month spending trend
+  const monthly: { month: string; total: number }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(y, m - 1 - i, 1);
+    const mStart = new Date(d.getFullYear(), d.getMonth(), 1);
+    const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+    const agg = await prisma.transaction.aggregate({
+      where: { userId: req.userId, date: { gte: mStart, lt: mEnd } },
+      _sum: { amount: true },
+    });
+    monthly.push({
+      month: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+      total: agg._sum.amount ?? 0,
+    });
+  }
+
+  res.json({ totalSpent, transactionCount, topCategory, alertsTriggered, byCategory, monthly });
 });
 
 // GET /api/transactions/:id

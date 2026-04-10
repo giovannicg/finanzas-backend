@@ -95,9 +95,10 @@ export interface TransactionSummary {
 }
 
 export const transactions = {
-  list: (params?: Record<string, string>) => {
+  list: async (params?: Record<string, string>) => {
     const qs = params ? "?" + new URLSearchParams(params).toString() : "";
-    return request<Transaction[]>(`/api/transactions${qs}`);
+    const data = await request<{ transactions: Transaction[]; total: number; page: number }>(`/api/transactions${qs}`);
+    return data.transactions;
   },
   summary: (params?: Record<string, string>) => {
     const qs = params ? "?" + new URLSearchParams(params).toString() : "";
