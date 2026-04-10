@@ -28,7 +28,7 @@ export async function writeLog(params: LogParams): Promise<void> {
       status: params.status ?? null,
       duration: params.duration ?? null,
       message: params.message,
-      meta: params.meta ?? undefined,
+      meta: params.meta ? JSON.parse(JSON.stringify(params.meta)) : undefined,
     },
   }).catch((e) => console.error('[logger] Error escribiendo log:', e));
 }
