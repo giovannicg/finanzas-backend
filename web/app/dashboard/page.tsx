@@ -54,7 +54,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
         <div className="flex gap-2">
           <select
@@ -128,7 +128,7 @@ export default function DashboardPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead>
+              <thead className="hidden sm:table-header-group">
                 <tr className="border-b border-gray-800">
                   <th className="pb-2 text-left text-xs font-medium text-gray-500">Fecha</th>
                   <th className="pb-2 text-left text-xs font-medium text-gray-500">Comercio</th>

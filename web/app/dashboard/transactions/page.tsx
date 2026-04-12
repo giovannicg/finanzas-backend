@@ -217,38 +217,41 @@ export default function TransactionsPage() {
         <h1 className="text-2xl font-bold text-white">Movimientos</h1>
         <button
           onClick={() => setShowModal(true)}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500"
+          className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 sm:px-4"
         >
-          + Nueva transacción
+          <span className="sm:hidden">+ Nueva</span>
+          <span className="hidden sm:inline">+ Nueva transacción</span>
         </button>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 rounded-xl bg-gray-900 p-4">
+      <div className="grid grid-cols-1 gap-2 rounded-xl bg-gray-900 p-4 sm:flex sm:flex-wrap sm:gap-3">
         <select
           value={filterCat}
           onChange={(e) => setFilterCat(e.target.value)}
-          className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-white outline-none ring-1 ring-gray-700"
+          className="w-full rounded-lg bg-gray-800 px-3 py-2 text-sm text-white outline-none ring-1 ring-gray-700 sm:w-auto sm:py-1.5"
         >
           <option value="">Todas las categorías</option>
           {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-        <input
-          type="date"
-          value={filterFrom}
-          onChange={(e) => setFilterFrom(e.target.value)}
-          className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-white outline-none ring-1 ring-gray-700"
-        />
-        <input
-          type="date"
-          value={filterTo}
-          onChange={(e) => setFilterTo(e.target.value)}
-          className="rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-white outline-none ring-1 ring-gray-700"
-        />
+        <div className="grid grid-cols-2 gap-2 sm:contents">
+          <input
+            type="date"
+            value={filterFrom}
+            onChange={(e) => setFilterFrom(e.target.value)}
+            className="w-full rounded-lg bg-gray-800 px-3 py-2 text-sm text-white outline-none ring-1 ring-gray-700 sm:w-auto sm:py-1.5"
+          />
+          <input
+            type="date"
+            value={filterTo}
+            onChange={(e) => setFilterTo(e.target.value)}
+            className="w-full rounded-lg bg-gray-800 px-3 py-2 text-sm text-white outline-none ring-1 ring-gray-700 sm:w-auto sm:py-1.5"
+          />
+        </div>
         {(filterCat || filterFrom || filterTo) && (
           <button
             onClick={() => { setFilterCat(""); setFilterFrom(""); setFilterTo(""); }}
-            className="rounded-lg bg-gray-700 px-3 py-1.5 text-xs text-gray-400 transition hover:text-white"
+            className="rounded-lg bg-gray-700 px-3 py-2 text-xs text-gray-400 transition hover:text-white sm:py-1.5"
           >
             Limpiar filtros
           </button>
@@ -264,7 +267,7 @@ export default function TransactionsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead>
+              <thead className="hidden sm:table-header-group">
                 <tr className="border-b border-gray-800">
                   <th className="pb-2 text-left text-xs font-medium text-gray-500">Fecha</th>
                   <th className="pb-2 text-left text-xs font-medium text-gray-500">Comercio</th>
