@@ -6,18 +6,31 @@ import TransactionRow from "@/components/TransactionRow";
 
 function Modal({
   cats,
+  editing,
   onClose,
   onSave,
 }: {
   cats: Category[];
+  editing?: Transaction;
   onClose: () => void;
   onSave: () => void;
 }) {
-  const [amount, setAmount] = useState("");
-  const [merchant, setMerchant] = useState("");
-  const [categoryId, setCategoryId] = useState(cats[0]?.id ?? 0);
-  const [last4, setLast4] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [amount, setAmount] = useState(editing ? String(editing.amount) : "");
+  const [merchant, setMerchant] = useState(editing?.merchant ?? "");
+  const [categoryId, setCategoryId] = useState(() => {
+    if (editing) {
+      // The API returns category as a string name at runtime
+      const catName = typeof editing.category === "string"
+        ? editing.category
+        : (editing.category as { name: string }).name;
+      return cats.find((c) => c.name === catName)?.id ?? cats[0]?.id ?? 0;
+    }
+    return cats[0]?.id ?? 0;
+  });
+  const [last4, setLast4] = useState(editing?.last4 ?? "");
+  const [date, setDate] = useState(
+    editing ? editing.date.split("T")[0] : new Date().toISOString().split("T")[0]
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -26,13 +39,25 @@ function Modal({
     setError("");
     setLoading(true);
     try {
-      await transactions.create({
-        amount: parseFloat(amount),
-        merchant,
-        categoryId,
-        last4: last4 || undefined,
-        date,
-      });
+      const selectedCat = cats.find((c) => c.id === categoryId);
+      const categoryName = selectedCat?.name ?? "";
+      if (editing) {
+        await transactions.update(editing.id, {
+          amount: parseFloat(amount),
+          merchant,
+          category: categoryName,
+          cardLast4: last4 || undefined,
+          date,
+        });
+      } else {
+        await transactions.create({
+          amount: parseFloat(amount),
+          merchant,
+          categoryId,
+          last4: last4 || undefined,
+          date,
+        });
+      }
       onSave();
       onClose();
     } catch (err: unknown) {
@@ -46,7 +71,9 @@ function Modal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
       <div className="w-full max-w-md rounded-xl bg-gray-900 p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Nueva transacción</h2>
+          <h2 className="text-lg font-semibold text-white">
+            {editing ? "Editar transacción" : "Nueva transacción"}
+          </h2>
           <button onClick={onClose} className="text-gray-500 hover:text-white">✕</button>
         </div>
 
@@ -146,6 +173,7 @@ export default function TransactionsPage() {
   const [cats, setCats] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editingTx, setEditingTx] = useState<Transaction | undefined>(undefined);
   const [filterCat, setFilterCat] = useState("");
   const [filterFrom, setFilterFrom] = useState("");
   const [filterTo, setFilterTo] = useState("");
@@ -176,6 +204,11 @@ export default function TransactionsPage() {
     if (!confirm("¿Eliminar esta transacción?")) return;
     await transactions.remove(id);
     load();
+  }
+
+  function handleEdit(tx: Transaction) {
+    setEditingTx(tx);
+    setShowModal(true);
   }
 
   return (
@@ -243,7 +276,7 @@ export default function TransactionsPage() {
               </thead>
               <tbody>
                 {txs.map((tx) => (
-                  <TransactionRow key={tx.id} tx={tx} onDelete={handleDelete} />
+                  <TransactionRow key={tx.id} tx={tx} onEdit={handleEdit} onDelete={handleDelete} />
                 ))}
               </tbody>
             </table>
@@ -252,7 +285,12 @@ export default function TransactionsPage() {
       </div>
 
       {showModal && cats.length > 0 && (
-        <Modal cats={cats} onClose={() => setShowModal(false)} onSave={load} />
+        <Modal
+          cats={cats}
+          editing={editingTx}
+          onClose={() => { setShowModal(false); setEditingTx(undefined); }}
+          onSave={load}
+        />
       )}
     </div>
   );

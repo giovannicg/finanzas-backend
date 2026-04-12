@@ -144,6 +144,41 @@ router.get('/summary', async (req: AuthRequest, res: Response): Promise<void> =>
   res.json({ totalSpent, transactionCount, topCategory, alertsTriggered, byCategory, monthly });
 });
 
+// PATCH /api/transactions/:id
+router.patch('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
+  const tx = await prisma.transaction.findFirst({
+    where: { id: req.params.id, userId: req.userId },
+  });
+
+  if (!tx) {
+    res.status(404).json({ error: 'Transacción no encontrada' });
+    return;
+  }
+
+  const { amount, merchant, cardLast4, category, date } = req.body;
+
+  const updated = await prisma.transaction.update({
+    where: { id: req.params.id },
+    data: {
+      ...(amount !== undefined ? { amount: parseFloat(amount) } : {}),
+      ...(merchant !== undefined ? { merchant } : {}),
+      ...(cardLast4 !== undefined ? { cardLast4: cardLast4 || null } : {}),
+      ...(category !== undefined ? { category } : {}),
+      ...(date !== undefined ? { date: new Date(date) } : {}),
+    },
+  });
+
+  writeLog({
+    type: 'TRANSACTION',
+    level: 'INFO',
+    userId: req.userId,
+    message: `Transacción editada: ${updated.merchant} $${updated.amount}`,
+    meta: { transactionId: updated.id },
+  }).catch(() => {});
+
+  res.json(updated);
+});
+
 // GET /api/transactions/:id
 router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
   const tx = await prisma.transaction.findFirst({

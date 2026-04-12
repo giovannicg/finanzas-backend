@@ -115,6 +115,11 @@ export const transactions = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  update: (id: number, data: Partial<{ amount: number; merchant: string; category: string; cardLast4: string; date: string }>) =>
+    request<Transaction>(`/api/transactions/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
   remove: (id: number) =>
     request<void>(`/api/transactions/${id}`, { method: "DELETE" }),
 };

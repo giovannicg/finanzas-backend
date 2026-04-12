@@ -42,8 +42,14 @@ function parseAmount(text: string): number | null {
   for (const pattern of AMOUNT_PATTERNS) {
     const match = text.match(pattern);
     if (match) {
-      // Normalize: remove commas used as thousand separators
-      const raw = match[1].replace(/,/g, '');
+      let raw = match[1];
+      // If comma is followed by 1–2 digits at the end, it's a decimal separator (e.g. 14,50)
+      // Otherwise it's a thousands separator (e.g. 1,234.56)
+      if (/,\d{1,2}$/.test(raw)) {
+        raw = raw.replace(/\./g, '').replace(',', '.');
+      } else {
+        raw = raw.replace(/,/g, '');
+      }
       const value = parseFloat(raw);
       if (!isNaN(value) && value > 0) return value;
     }
