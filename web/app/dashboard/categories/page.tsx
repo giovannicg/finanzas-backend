@@ -133,7 +133,7 @@ export default function CategoriesPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  async function handleDelete(id: number) {
+  async function handleDelete(id: string) {
     if (!confirm("¿Eliminar esta categoría?")) return;
     try {
       await categories.remove(id);
