@@ -140,7 +140,7 @@ export const categories = {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  remove: (id: number) =>
+  remove: (id: string) =>
     request<void>(`/api/categories/${id}`, { method: "DELETE" }),
 };
 
