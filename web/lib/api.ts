@@ -77,12 +77,12 @@ export const auth = {
 // ── Transactions ──────────────────────────────────────────────────────────────
 
 export interface Transaction {
-  id: number;
+  id: string;
   amount: number;
   merchant: string;
-  last4?: string;
+  cardLast4?: string;
   date: string;
-  category: { id: number; name: string; color: string };
+  category: string;
 }
 
 export interface TransactionSummary {
@@ -107,20 +107,20 @@ export const transactions = {
   create: (data: {
     amount: number;
     merchant: string;
-    categoryId: number;
-    last4?: string;
+    category: string;
+    cardLast4?: string;
     date?: string;
   }) =>
     request<Transaction>("/api/transactions", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  update: (id: number, data: Partial<{ amount: number; merchant: string; category: string; cardLast4: string; date: string }>) =>
+  update: (id: string, data: Partial<{ amount: number; merchant: string; category: string; cardLast4: string; date: string }>) =>
     request<Transaction>(`/api/transactions/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
-  remove: (id: number) =>
+  remove: (id: string) =>
     request<void>(`/api/transactions/${id}`, { method: "DELETE" }),
 };
 

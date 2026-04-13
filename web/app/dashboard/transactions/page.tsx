@@ -53,8 +53,8 @@ function Modal({
         await transactions.create({
           amount: parseFloat(amount),
           merchant,
-          categoryId,
-          last4: last4 || undefined,
+          category: categoryName,
+          cardLast4: last4 || undefined,
           date,
         });
       }

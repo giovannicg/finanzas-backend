@@ -15,8 +15,13 @@ export default function TransactionRow({ tx, onEdit, onDelete }: Props) {
     year: "numeric",
   });
 
-  const catName = typeof tx.category === "string" ? tx.category : tx.category?.name;
-  const catColor = typeof tx.category === "string" ? "#64748b" : tx.category?.color;
+  const CATEGORY_COLORS: Record<string, string> = {
+    Comida: "#f97316", Transporte: "#3b82f6", Entretenimiento: "#a855f7",
+    Salud: "#22c55e", Supermercado: "#eab308", Compras: "#ec4899",
+    Servicios: "#06b6d4", Educación: "#f43f5e", Viajes: "#14b8a6", Otros: "#64748b",
+  };
+  const catName = typeof tx.category === "string" ? tx.category : (tx.category as unknown as { name: string })?.name;
+  const catColor = CATEGORY_COLORS[catName ?? ""] ?? "#64748b";
   const amountStr = `$${tx.amount.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
 
   return (
@@ -66,7 +71,7 @@ export default function TransactionRow({ tx, onEdit, onDelete }: Props) {
         <td className="py-3 pr-4">
           {catName && <CategoryBadge name={catName} color={catColor ?? "#64748b"} />}
         </td>
-        <td className="py-3 pr-4 text-sm text-gray-400">{tx.last4 ? `••••${tx.last4}` : "—"}</td>
+        <td className="py-3 pr-4 text-sm text-gray-400">{tx.cardLast4 ? `••••${tx.cardLast4}` : "—"}</td>
         <td className="py-3 text-right text-sm font-semibold text-white">{amountStr}</td>
         <td className="py-3 pl-4 text-right">
           <div className="flex items-center justify-end gap-3">
