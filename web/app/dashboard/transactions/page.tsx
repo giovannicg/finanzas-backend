@@ -17,9 +17,9 @@ function Modal({
 }) {
   const [amount, setAmount] = useState(editing ? String(editing.amount) : "");
   const [merchant, setMerchant] = useState(editing?.merchant ?? "");
-  const [categoryId, setCategoryId] = useState(() => {
+  const [categoryId, setCategoryId] = useState<string>(() => {
     const catName = typeof editing?.category === "string" ? editing.category : "";
-    return cats.find((c) => c.name === catName)?.id ?? cats[0]?.id ?? "";
+    return String(cats.find((c) => c.name === catName)?.id ?? cats[0]?.id ?? "");
   });
   const [last4, setLast4] = useState(editing?.cardLast4 ?? "");
   const [date, setDate] = useState(

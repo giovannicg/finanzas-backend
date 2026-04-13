@@ -127,7 +127,7 @@ export const transactions = {
 // ── Categories ────────────────────────────────────────────────────────────────
 
 export interface Category {
-  id: number;
+  id: string;
   name: string;
   color: string;
   isDefault: boolean;
