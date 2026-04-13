@@ -200,7 +200,7 @@ export default function TransactionsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  async function handleDelete(id: number) {
+  async function handleDelete(id: string) {
     if (!confirm("¿Eliminar esta transacción?")) return;
     await transactions.remove(id);
     load();
