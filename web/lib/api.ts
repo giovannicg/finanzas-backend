@@ -178,3 +178,21 @@ export const alerts = {
   remove: (id: string) =>
     request<void>(`/api/alerts/${id}`, { method: "DELETE" }),
 };
+
+// ── User ──────────────────────────────────────────────────────────────────────
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  inboxEmail: string;
+  totalBudget: number | null;
+}
+
+export const userApi = {
+  me: () => request<UserProfile>("/api/users/me"),
+  setTotalBudget: (totalBudget: number | null) =>
+    request<UserProfile>("/api/users/me", {
+      method: "PATCH",
+      body: JSON.stringify({ totalBudget }),
+    }),
+};
