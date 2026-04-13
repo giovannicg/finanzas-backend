@@ -27,7 +27,7 @@ function Modal({
     }
     return cats[0]?.id ?? 0;
   });
-  const [last4, setLast4] = useState(editing?.last4 ?? "");
+  const [last4, setLast4] = useState(editing?.cardLast4 ?? "");
   const [date, setDate] = useState(
     editing ? editing.date.split("T")[0] : new Date().toISOString().split("T")[0]
   );
