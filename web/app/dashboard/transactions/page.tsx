@@ -18,14 +18,8 @@ function Modal({
   const [amount, setAmount] = useState(editing ? String(editing.amount) : "");
   const [merchant, setMerchant] = useState(editing?.merchant ?? "");
   const [categoryId, setCategoryId] = useState(() => {
-    if (editing) {
-      // The API returns category as a string name at runtime
-      const catName = typeof editing.category === "string"
-        ? editing.category
-        : (editing.category as { name: string }).name;
-      return cats.find((c) => c.name === catName)?.id ?? cats[0]?.id ?? 0;
-    }
-    return cats[0]?.id ?? 0;
+    const catName = typeof editing?.category === "string" ? editing.category : "";
+    return cats.find((c) => c.name === catName)?.id ?? cats[0]?.id ?? "";
   });
   const [last4, setLast4] = useState(editing?.cardLast4 ?? "");
   const [date, setDate] = useState(
@@ -126,7 +120,7 @@ function Modal({
               <label className="mb-1 block text-xs font-medium text-gray-400">Categoría</label>
               <select
                 value={categoryId}
-                onChange={(e) => setCategoryId(Number(e.target.value))}
+                onChange={(e) => setCategoryId(e.target.value)}
                 className="w-full rounded-lg bg-gray-800 px-3 py-2 text-sm text-white outline-none ring-1 ring-gray-700 focus:ring-indigo-500"
               >
                 {cats.map((c) => (
