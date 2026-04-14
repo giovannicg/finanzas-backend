@@ -171,28 +171,35 @@ export default function TransactionsPage() {
   const [filterCat, setFilterCat] = useState("");
   const [filterFrom, setFilterFrom] = useState("");
   const [filterTo, setFilterTo] = useState("");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const LIMIT = 20;
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const params: Record<string, string> = {};
-      if (filterCat) params.categoryId = filterCat;
+      const params: Record<string, string> = { page: String(page), limit: String(LIMIT) };
+      if (filterCat) params.category = filterCat;
       if (filterFrom) params.from = filterFrom;
       if (filterTo) params.to = filterTo;
-      const [list, catList] = await Promise.all([
+      const [data, catList] = await Promise.all([
         transactions.list(params),
         categories.list(),
       ]);
-      setTxs(list);
+      setTxs(data.transactions);
+      setTotal(data.total);
       setCats(catList);
     } catch {
       // ignore
     } finally {
       setLoading(false);
     }
-  }, [filterCat, filterFrom, filterTo]);
+  }, [filterCat, filterFrom, filterTo, page]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => { setPage(1); }, [filterCat, filterFrom, filterTo]);
 
   async function handleDelete(id: string) {
     if (!confirm("¿Eliminar esta transacción?")) return;
@@ -204,6 +211,10 @@ export default function TransactionsPage() {
     setEditingTx(tx);
     setShowModal(true);
   }
+
+  const totalPages = Math.ceil(total / LIMIT);
+  const from = total === 0 ? 0 : (page - 1) * LIMIT + 1;
+  const to = Math.min(page * LIMIT, total);
 
   return (
     <div className="space-y-6">
@@ -226,7 +237,7 @@ export default function TransactionsPage() {
           className="w-full rounded-lg bg-gray-800 px-3 py-2 text-sm text-white outline-none ring-1 ring-gray-700 sm:w-auto sm:py-1.5"
         >
           <option value="">Todas las categorías</option>
-          {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          {cats.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
         </select>
         <div className="grid grid-cols-2 gap-2 sm:contents">
           <input
@@ -259,25 +270,52 @@ export default function TransactionsPage() {
         ) : txs.length === 0 ? (
           <div className="py-12 text-center text-sm text-gray-500">Sin transacciones</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="hidden sm:table-header-group">
-                <tr className="border-b border-gray-800">
-                  <th className="pb-2 text-left text-xs font-medium text-gray-500">Fecha</th>
-                  <th className="pb-2 text-left text-xs font-medium text-gray-500">Comercio</th>
-                  <th className="pb-2 text-left text-xs font-medium text-gray-500">Categoría</th>
-                  <th className="pb-2 text-left text-xs font-medium text-gray-500">Tarjeta</th>
-                  <th className="pb-2 text-right text-xs font-medium text-gray-500">Monto</th>
-                  <th className="pb-2" />
-                </tr>
-              </thead>
-              <tbody>
-                {txs.map((tx) => (
-                  <TransactionRow key={tx.id} tx={tx} onEdit={handleEdit} onDelete={handleDelete} />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="hidden sm:table-header-group">
+                  <tr className="border-b border-gray-800">
+                    <th className="pb-2 text-left text-xs font-medium text-gray-500">Fecha</th>
+                    <th className="pb-2 text-left text-xs font-medium text-gray-500">Comercio</th>
+                    <th className="pb-2 text-left text-xs font-medium text-gray-500">Categoría</th>
+                    <th className="pb-2 text-left text-xs font-medium text-gray-500">Tarjeta</th>
+                    <th className="pb-2 text-right text-xs font-medium text-gray-500">Monto</th>
+                    <th className="pb-2" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {txs.map((tx) => (
+                    <TransactionRow key={tx.id} tx={tx} onEdit={handleEdit} onDelete={handleDelete} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-4 flex items-center justify-between border-t border-gray-800 pt-4">
+                <span className="text-xs text-gray-500">
+                  {from}–{to} de {total}
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPage((p) => p - 1)}
+                    disabled={page === 1}
+                    className="rounded-lg bg-gray-800 px-3 py-1.5 text-xs text-gray-300 transition hover:bg-gray-700 disabled:opacity-40"
+                  >
+                    ← Anterior
+                  </button>
+                  <button
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={page >= totalPages}
+                    className="rounded-lg bg-gray-800 px-3 py-1.5 text-xs text-gray-300 transition hover:bg-gray-700 disabled:opacity-40"
+                  >
+                    Siguiente →
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 

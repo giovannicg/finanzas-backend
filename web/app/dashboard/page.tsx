@@ -39,7 +39,7 @@ export default function DashboardPage() {
         transactions.list({ ...params, limit: "10" }),
       ]);
       setSummary(sum);
-      setRecent(txs);
+      setRecent(txs.transactions);
     } catch {
       // ignore
     } finally {

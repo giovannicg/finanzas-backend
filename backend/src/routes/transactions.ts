@@ -29,7 +29,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
   const [transactions, total] = await Promise.all([
     prisma.transaction.findMany({
       where,
-      orderBy: { date: 'desc' },
+      orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
       skip,
       take: parseInt(limit as string),
     }),
