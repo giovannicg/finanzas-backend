@@ -1,24 +1,19 @@
 import type { Alert } from "@/lib/api";
 
-const CATEGORY_COLORS: Record<string, string> = {
-  Comida: "#f97316", Transporte: "#3b82f6", Entretenimiento: "#a855f7",
-  Salud: "#22c55e", Supermercado: "#eab308", Ropa: "#ec4899",
-  Servicios: "#06b6d4", Educación: "#f43f5e", Viajes: "#14b8a6", Otros: "#64748b",
-};
-
 interface Props {
   alert: Alert;
+  catColor?: string;
   onEdit: (alert: Alert) => void;
   onDelete: (id: string) => void;
 }
 
-export default function BudgetCard({ alert, onEdit, onDelete }: Props) {
+export default function BudgetCard({ alert, catColor, onEdit, onDelete }: Props) {
   const pct = Math.min(alert.percentage ?? 0, 100);
   const barColor =
     pct >= 100 ? "bg-red-500" : pct >= 80 ? "bg-yellow-500" : "bg-emerald-500";
   const textColor =
     pct >= 100 ? "text-red-400" : pct >= 80 ? "text-yellow-400" : "text-emerald-400";
-  const color = CATEGORY_COLORS[alert.category] ?? "#64748b";
+  const color = catColor ?? "#64748b";
 
   return (
     <div className="rounded-xl bg-gray-900 p-5">

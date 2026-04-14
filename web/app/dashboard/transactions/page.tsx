@@ -285,7 +285,13 @@ export default function TransactionsPage() {
                 </thead>
                 <tbody>
                   {txs.map((tx) => (
-                    <TransactionRow key={tx.id} tx={tx} onEdit={handleEdit} onDelete={handleDelete} />
+                    <TransactionRow
+                      key={tx.id}
+                      tx={tx}
+                      catColor={cats.find((c) => c.name === tx.category)?.color}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                    />
                   ))}
                 </tbody>
               </table>

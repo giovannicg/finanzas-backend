@@ -3,11 +3,12 @@ import CategoryBadge from "./CategoryBadge";
 
 interface Props {
   tx: Transaction;
+  catColor?: string;
   onEdit?: (tx: Transaction) => void;
   onDelete?: (id: string) => void;
 }
 
-export default function TransactionRow({ tx, onEdit, onDelete }: Props) {
+export default function TransactionRow({ tx, catColor, onEdit, onDelete }: Props) {
   const date = new Date(tx.date);
   const formatted = date.toLocaleDateString("es-MX", {
     day: "2-digit",
@@ -15,13 +16,8 @@ export default function TransactionRow({ tx, onEdit, onDelete }: Props) {
     year: "numeric",
   });
 
-  const CATEGORY_COLORS: Record<string, string> = {
-    Comida: "#f97316", Transporte: "#3b82f6", Entretenimiento: "#a855f7",
-    Salud: "#22c55e", Supermercado: "#eab308", Compras: "#ec4899",
-    Servicios: "#06b6d4", Educación: "#f43f5e", Viajes: "#14b8a6", Otros: "#64748b",
-  };
   const catName = typeof tx.category === "string" ? tx.category : (tx.category as unknown as { name: string })?.name;
-  const catColor = CATEGORY_COLORS[catName ?? ""] ?? "#64748b";
+  const color = catColor ?? "#64748b";
   const amountStr = `$${tx.amount.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
 
   return (
@@ -35,7 +31,7 @@ export default function TransactionRow({ tx, onEdit, onDelete }: Props) {
               <p className="mt-0.5 text-xs text-gray-400">{formatted}</p>
               {catName && (
                 <div className="mt-1.5">
-                  <CategoryBadge name={catName} color={catColor ?? "#64748b"} />
+                  <CategoryBadge name={catName} color={color} />
                 </div>
               )}
             </div>
@@ -69,7 +65,7 @@ export default function TransactionRow({ tx, onEdit, onDelete }: Props) {
         <td className="py-3 pr-4 text-sm text-gray-300">{formatted}</td>
         <td className="py-3 pr-4 text-sm font-medium text-white">{tx.merchant}</td>
         <td className="py-3 pr-4">
-          {catName && <CategoryBadge name={catName} color={catColor ?? "#64748b"} />}
+          {catName && <CategoryBadge name={catName} color={color} />}
         </td>
         <td className="py-3 pr-4 text-sm text-gray-400">{tx.cardLast4 ? `••••${tx.cardLast4}` : "—"}</td>
         <td className="py-3 text-right text-sm font-semibold text-white">{amountStr}</td>

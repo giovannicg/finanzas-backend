@@ -139,7 +139,11 @@ export default function DashboardPage() {
               </thead>
               <tbody>
                 {recent.map((tx) => (
-                  <TransactionRow key={tx.id} tx={tx} />
+                  <TransactionRow
+                    key={tx.id}
+                    tx={tx}
+                    catColor={summary?.byCategory.find((c) => c.category === tx.category)?.color}
+                  />
                 ))}
               </tbody>
             </table>

@@ -306,7 +306,13 @@ export default function BudgetsPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {alertList.map((a) => (
-            <BudgetCard key={a.id} alert={a} onEdit={handleEdit} onDelete={handleDelete} />
+            <BudgetCard
+              key={a.id}
+              alert={a}
+              catColor={cats.find((c) => c.name === a.category)?.color}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
           ))}
         </div>
       )}
