@@ -1,0 +1,10 @@
+UPDATE "Category" SET color = '#f87171' WHERE name = 'Comida';
+UPDATE "Category" SET color = '#818cf8' WHERE name = 'Transporte';
+UPDATE "Category" SET color = '#c084fc' WHERE name = 'Entretenimiento';
+UPDATE "Category" SET color = '#4ade80' WHERE name = 'Salud';
+UPDATE "Category" SET color = '#fbbf24' WHERE name = 'Supermercado';
+UPDATE "Category" SET color = '#f472b6' WHERE name = 'Compras';
+UPDATE "Category" SET color = '#38bdf8' WHERE name = 'Servicios';
+UPDATE "Category" SET color = '#fb923c' WHERE name = 'Educación';
+UPDATE "Category" SET color = '#34d399' WHERE name = 'Viajes';
+UPDATE "Category" SET color = '#94a3b8' WHERE name = 'Otros';

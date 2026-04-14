@@ -39,16 +39,16 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
 
   // Seed default categories for the new user
   const DEFAULT_CATEGORIES = [
-    { name: 'Comida',          color: '#f97316' },
-    { name: 'Transporte',      color: '#3b82f6' },
-    { name: 'Entretenimiento', color: '#a855f7' },
-    { name: 'Salud',           color: '#22c55e' },
-    { name: 'Supermercado',    color: '#eab308' },
-    { name: 'Compras',         color: '#ec4899' },
-    { name: 'Servicios',       color: '#06b6d4' },
-    { name: 'Educación',       color: '#f43f5e' },
-    { name: 'Viajes',          color: '#14b8a6' },
-    { name: 'Otros',           color: '#64748b' },
+    { name: 'Comida',          color: '#f87171' },
+    { name: 'Transporte',      color: '#818cf8' },
+    { name: 'Entretenimiento', color: '#c084fc' },
+    { name: 'Salud',           color: '#4ade80' },
+    { name: 'Supermercado',    color: '#fbbf24' },
+    { name: 'Compras',         color: '#f472b6' },
+    { name: 'Servicios',       color: '#38bdf8' },
+    { name: 'Educación',       color: '#fb923c' },
+    { name: 'Viajes',          color: '#34d399' },
+    { name: 'Otros',           color: '#94a3b8' },
   ];
   await prisma.category.createMany({
     data: DEFAULT_CATEGORIES.map((c) => ({ ...c, userId: user.id })),
