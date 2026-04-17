@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import ExcelJS from 'exceljs';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { checkAlerts } from '../services/alertChecker';
 import { writeLog } from '../services/logger';
@@ -142,6 +143,85 @@ router.get('/summary', async (req: AuthRequest, res: Response): Promise<void> =>
   }
 
   res.json({ totalSpent, transactionCount, topCategory, alertsTriggered, byCategory, monthly });
+});
+
+// GET /api/transactions/export?month=4&year=2026
+router.get('/export', async (req: AuthRequest, res: Response): Promise<void> => {
+  const now = new Date();
+  const y = parseInt((req.query.year as string) || now.getFullYear().toString());
+  const m = parseInt((req.query.month as string) || (now.getMonth() + 1).toString());
+
+  const start = new Date(y, m - 1, 1);
+  const end   = new Date(y, m, 1);
+
+  const txs = await prisma.transaction.findMany({
+    where: { userId: req.userId, date: { gte: start, lt: end } },
+    orderBy: [{ date: 'asc' }, { createdAt: 'asc' }],
+  });
+
+  const MONTH_NAMES: Record<number, string> = {
+    1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril', 5: 'Mayo', 6: 'Junio',
+    7: 'Julio', 8: 'Agosto', 9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre',
+  };
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Finanzas App';
+  const sheet = workbook.addWorksheet('Estado de cuenta');
+
+  sheet.columns = [
+    { key: 'date',     width: 14 },
+    { key: 'merchant', width: 32 },
+    { key: 'category', width: 20 },
+    { key: 'card',     width: 14 },
+    { key: 'amount',   width: 14 },
+  ];
+
+  // Title
+  sheet.mergeCells('A1:E1');
+  const title = sheet.getCell('A1');
+  title.value = `Estado de cuenta — ${MONTH_NAMES[m]} ${y}`;
+  title.font = { bold: true, size: 13, color: { argb: 'FF0F172A' } };
+  title.alignment = { horizontal: 'center', vertical: 'middle' };
+  sheet.getRow(1).height = 28;
+
+  // Header
+  const headerRow = sheet.addRow(['Fecha', 'Establecimiento', 'Categoría', 'Tarjeta', 'Monto']);
+  headerRow.eachCell((cell) => {
+    cell.font  = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+  });
+  headerRow.height = 22;
+
+  // Data
+  for (const tx of txs) {
+    const row = sheet.addRow([
+      new Date(tx.date).toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      tx.merchant,
+      tx.category,
+      tx.cardLast4 ? `****${tx.cardLast4}` : '—',
+      tx.amount,
+    ]);
+    row.getCell(5).numFmt = '"$"#,##0.00';
+    row.getCell(5).alignment = { horizontal: 'right' };
+  }
+
+  // Total row
+  const total = txs.reduce((s, t) => s + t.amount, 0);
+  const totalRow = sheet.addRow(['', '', '', 'TOTAL', total]);
+  totalRow.font = { bold: true };
+  totalRow.getCell(4).alignment = { horizontal: 'right' };
+  totalRow.getCell(5).numFmt = '"$"#,##0.00';
+  totalRow.getCell(5).alignment = { horizontal: 'right' };
+  totalRow.eachCell((cell) => {
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
+  });
+
+  const filename = `estado-cuenta-${(MONTH_NAMES[m] ?? m).toString().toLowerCase()}-${y}.xlsx`;
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  await workbook.xlsx.write(res);
+  res.end();
 });
 
 // PATCH /api/transactions/:id

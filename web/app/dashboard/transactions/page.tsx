@@ -162,6 +162,8 @@ function Modal({
   );
 }
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 export default function TransactionsPage() {
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [cats, setCats] = useState<Category[]>([]);
@@ -173,6 +175,10 @@ export default function TransactionsPage() {
   const [filterTo, setFilterTo] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [exporting, setExporting] = useState(false);
+  const now = new Date();
+  const [exportMonth, setExportMonth] = useState(now.getMonth() + 1);
+  const [exportYear, setExportYear] = useState(now.getFullYear());
   const LIMIT = 20;
 
   const load = useCallback(async () => {
@@ -212,21 +218,74 @@ export default function TransactionsPage() {
     setShowModal(true);
   }
 
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `${BASE_URL}/api/transactions/export?month=${exportMonth}&year=${exportYear}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) throw new Error("Error al exportar");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `estado-cuenta-${exportYear}-${String(exportMonth).padStart(2, "0")}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert("No se pudo exportar el Excel");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   const totalPages = Math.ceil(total / LIMIT);
   const from = total === 0 ? 0 : (page - 1) * LIMIT + 1;
   const to = Math.min(page * LIMIT, total);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-white">Movimientos</h1>
-        <button
-          onClick={() => setShowModal(true)}
-          className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 sm:px-4"
-        >
-          <span className="sm:hidden">+ Nueva</span>
-          <span className="hidden sm:inline">+ Nueva transacción</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Export controls */}
+          <div className="flex items-center gap-1 rounded-lg bg-gray-900 px-2 py-1.5 text-sm">
+            <select
+              value={exportMonth}
+              onChange={(e) => setExportMonth(Number(e.target.value))}
+              className="bg-transparent text-gray-300 outline-none"
+            >
+              {["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"].map((n, i) => (
+                <option key={i} value={i + 1}>{n}</option>
+              ))}
+            </select>
+            <select
+              value={exportYear}
+              onChange={(e) => setExportYear(Number(e.target.value))}
+              className="bg-transparent text-gray-300 outline-none"
+            >
+              {[now.getFullYear() - 1, now.getFullYear()].map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              className="ml-1 rounded bg-emerald-700 px-2 py-0.5 text-xs font-semibold text-white transition hover:bg-emerald-600 disabled:opacity-50"
+            >
+              {exporting ? "…" : "↓ Excel"}
+            </button>
+          </div>
+          <button
+            onClick={() => setShowModal(true)}
+            className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 sm:px-4"
+          >
+            <span className="sm:hidden">+ Nueva</span>
+            <span className="hidden sm:inline">+ Nueva transacción</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
