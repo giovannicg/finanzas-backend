@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import { extractSMSText, extractInboxEmail } from '../services/emailParser';
 import { parseSMS } from '../services/smsParser';
@@ -24,12 +25,23 @@ router.post('/sms', async (req: Request, res: Response): Promise<void> => {
   }
 
   let userId: string;
-  try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
-    userId = payload.userId;
-  } catch {
-    res.status(401).json({ error: 'Token inválido' });
-    return;
+  if (token.startsWith('fin_')) {
+    const hash = crypto.createHash('sha256').update(token).digest('hex');
+    const apiToken = await prisma.apiToken.findUnique({ where: { tokenHash: hash } });
+    if (!apiToken) {
+      res.status(401).json({ error: 'API token inválido' });
+      return;
+    }
+    prisma.apiToken.update({ where: { id: apiToken.id }, data: { lastUsedAt: new Date() } }).catch(() => {});
+    userId = apiToken.userId;
+  } else {
+    try {
+      const payload = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+      userId = payload.userId;
+    } catch {
+      res.status(401).json({ error: 'Token inválido' });
+      return;
+    }
   }
 
   const parsed = parseSMS(text.trim());

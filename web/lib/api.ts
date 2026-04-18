@@ -195,3 +195,23 @@ export const userApi = {
       body: JSON.stringify({ totalBudget }),
     }),
 };
+
+// ── API Tokens ─────────────────────────────────────────────────────────────────
+
+export interface ApiToken {
+  id: string;
+  name: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+  token?: string; // solo presente al crear
+}
+
+export const apiTokens = {
+  list: () => request<ApiToken[]>("/api/tokens"),
+  create: (name: string) =>
+    request<ApiToken>("/api/tokens", {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    }),
+  remove: (id: string) => request<void>(`/api/tokens/${id}`, { method: "DELETE" }),
+};

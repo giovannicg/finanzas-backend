@@ -17,7 +17,20 @@ model User {
   transactions Transaction[]
   alerts       Alert[]
   categories   Category[]
+  apiTokens    ApiToken[]
   createdAt    DateTime      @default(now())
+}
+
+model ApiToken {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  name       String
+  tokenHash  String    @unique
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model Transaction {

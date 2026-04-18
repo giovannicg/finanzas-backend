@@ -10,6 +10,7 @@ import categoriesRouter from './routes/categories';
 import usersRouter from './routes/users';
 import webhookRouter from './routes/webhook';
 import logsRouter from './routes/logs';
+import apiTokensRouter from './routes/apiTokens';
 import { requestLogger } from './middleware/requestLogger';
 
 const app = express();
@@ -30,6 +31,7 @@ app.use('/api/alerts', alertsRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/logs', logsRouter);
+app.use('/api/tokens', apiTokensRouter);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 

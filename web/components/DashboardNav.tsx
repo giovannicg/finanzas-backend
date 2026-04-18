@@ -9,6 +9,7 @@ const navItems = [
   { href: "/dashboard/transactions", label: "Movimientos", icon: "⇄" },
   { href: "/dashboard/budgets", label: "Presupuestos", icon: "◎" },
   { href: "/dashboard/categories", label: "Categorías", icon: "⊞" },
+  { href: "/dashboard/tokens", label: "API Tokens", icon: "⚿" },
 ];
 
 export default function DashboardNav() {
