@@ -139,6 +139,11 @@ export const categories = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  update: (id: string, data: { name?: string; color?: string }) =>
+    request<Category>(`/api/categories/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
   remove: (id: string) =>
     request<void>(`/api/categories/${id}`, { method: "DELETE" }),
 };
