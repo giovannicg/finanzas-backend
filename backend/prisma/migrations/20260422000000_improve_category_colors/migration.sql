@@ -1,0 +1,11 @@
+-- Improved category color palette: semantically meaningful, visually distinct on dark backgrounds
+UPDATE "Category" SET color = '#fb7185' WHERE name = 'Comida';         -- rose-400
+UPDATE "Category" SET color = '#60a5fa' WHERE name = 'Transporte';     -- blue-400
+UPDATE "Category" SET color = '#a78bfa' WHERE name = 'Entretenimiento'; -- violet-400
+UPDATE "Category" SET color = '#4ade80' WHERE name = 'Salud';          -- green-400
+UPDATE "Category" SET color = '#facc15' WHERE name = 'Supermercado';   -- yellow-400
+UPDATE "Category" SET color = '#f472b6' WHERE name = 'Compras';        -- pink-400
+UPDATE "Category" SET color = '#38bdf8' WHERE name = 'Servicios';      -- sky-400
+UPDATE "Category" SET color = '#fb923c' WHERE name = 'Educación';      -- orange-400
+UPDATE "Category" SET color = '#2dd4bf' WHERE name = 'Viajes';         -- teal-400
+UPDATE "Category" SET color = '#94a3b8' WHERE name = 'Otros';          -- slate-400

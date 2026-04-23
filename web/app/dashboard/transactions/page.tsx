@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { X } from "lucide-react";
 import { transactions, categories, type Transaction, type Category } from "@/lib/api";
 import TransactionRow from "@/components/TransactionRow";
 
@@ -68,7 +69,7 @@ function Modal({
           <h2 className="text-lg font-semibold text-white">
             {editing ? "Editar transacción" : "Nueva transacción"}
           </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-white">✕</button>
+          <button onClick={onClose} className="cursor-pointer rounded p-1 text-gray-500 transition hover:text-white"><X size={18} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -80,6 +81,7 @@ function Modal({
               <label className="mb-1 block text-xs font-medium text-gray-400">Monto ($)</label>
               <input
                 type="number"
+                inputMode="decimal"
                 step="0.01"
                 min="0.01"
                 required
@@ -151,7 +153,7 @@ function Modal({
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 rounded-lg bg-indigo-600 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:opacity-50"
+              className="flex-1 cursor-pointer rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-50"
             >
               {loading ? "Guardando…" : "Guardar"}
             </button>
@@ -280,7 +282,7 @@ export default function TransactionsPage() {
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 sm:px-4"
+            className="cursor-pointer rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 sm:px-4"
           >
             <span className="sm:hidden">+ Nueva</span>
             <span className="hidden sm:inline">+ Nueva transacción</span>

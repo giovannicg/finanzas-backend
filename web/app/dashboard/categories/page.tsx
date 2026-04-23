@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { X, Trash2 } from "lucide-react";
 import { categories, type Category } from "@/lib/api";
 import CategoryBadge from "@/components/CategoryBadge";
 
 const PRESET_COLORS = [
-  "#6366f1","#8b5cf6","#ec4899","#f43f5e","#f97316",
-  "#eab308","#22c55e","#10b981","#06b6d4","#3b82f6",
+  "#fb7185","#f472b6","#fb923c","#facc15","#4ade80",
+  "#2dd4bf","#38bdf8","#60a5fa","#a78bfa","#94a3b8",
 ];
 
 function CategoryModal({
@@ -44,7 +45,7 @@ function CategoryModal({
       <div className="w-full max-w-sm rounded-xl bg-gray-900 p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-white">Nueva categoría</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-white">✕</button>
+          <button onClick={onClose} className="cursor-pointer rounded p-1 text-gray-500 transition hover:text-white"><X size={18} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -104,7 +105,7 @@ function CategoryModal({
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 rounded-lg bg-indigo-600 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:opacity-50"
+              className="flex-1 cursor-pointer rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-50"
             >
               {loading ? "Guardando…" : "Guardar"}
             </button>
@@ -152,7 +153,7 @@ export default function CategoriesPage() {
         <h1 className="text-2xl font-bold text-white">Categorías</h1>
         <button
           onClick={() => setShowModal(true)}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500"
+          className="cursor-pointer rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
         >
           + Nueva categoría
         </button>
@@ -189,9 +190,9 @@ export default function CategoriesPage() {
                     <CategoryBadge name={c.name} color={c.color} />
                     <button
                       onClick={() => handleDelete(c.id)}
-                      className="text-xs text-gray-500 transition hover:text-red-400"
+                      className="cursor-pointer flex items-center gap-1.5 rounded px-2 py-1 text-xs text-gray-500 transition hover:bg-red-950/40 hover:text-red-400"
                     >
-                      ✕ Eliminar
+                      <Trash2 size={12} /> Eliminar
                     </button>
                   </div>
                 ))}

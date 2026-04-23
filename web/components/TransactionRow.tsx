@@ -1,3 +1,4 @@
+import { Pencil, X } from "lucide-react";
 import type { Transaction } from "@/lib/api";
 import CategoryBadge from "./CategoryBadge";
 
@@ -40,19 +41,19 @@ export default function TransactionRow({ tx, catColor, onEdit, onDelete }: Props
               {onEdit && (
                 <button
                   onClick={() => onEdit(tx)}
-                  className="text-base text-gray-500 transition hover:text-indigo-400"
+                  className="cursor-pointer rounded p-1 text-gray-500 transition hover:text-indigo-400"
                   title="Editar"
                 >
-                  ✎
+                  <Pencil size={14} />
                 </button>
               )}
               {onDelete && (
                 <button
                   onClick={() => onDelete(tx.id)}
-                  className="text-sm text-gray-500 transition hover:text-red-400"
+                  className="cursor-pointer rounded p-1 text-gray-500 transition hover:text-red-400"
                   title="Eliminar"
                 >
-                  ✕
+                  <X size={14} />
                 </button>
               )}
             </div>
@@ -74,19 +75,19 @@ export default function TransactionRow({ tx, catColor, onEdit, onDelete }: Props
             {onEdit && (
               <button
                 onClick={() => onEdit(tx)}
-                className="text-xs text-gray-500 transition hover:text-indigo-400"
+                className="cursor-pointer rounded p-1 text-gray-500 transition hover:text-indigo-400"
                 title="Editar"
               >
-                ✎
+                <Pencil size={14} />
               </button>
             )}
             {onDelete && (
               <button
                 onClick={() => onDelete(tx.id)}
-                className="text-xs text-gray-500 transition hover:text-red-400"
+                className="cursor-pointer rounded p-1 text-gray-500 transition hover:text-red-400"
                 title="Eliminar"
               >
-                ✕
+                <X size={14} />
               </button>
             )}
           </div>

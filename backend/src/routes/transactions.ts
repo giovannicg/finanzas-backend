@@ -106,9 +106,9 @@ router.get('/summary', async (req: AuthRequest, res: Response): Promise<void> =>
   const colorMap = new Map(customCats.map((c) => [c.name, c.color]));
 
   const DEFAULT_COLORS: Record<string, string> = {
-    Comida: '#f87171', Transporte: '#818cf8', Entretenimiento: '#c084fc',
-    Salud: '#4ade80', Supermercado: '#fbbf24', Compras: '#f472b6',
-    Servicios: '#38bdf8', Educación: '#fb923c', Viajes: '#34d399', Otros: '#94a3b8',
+    Comida: '#fb7185', Transporte: '#60a5fa', Entretenimiento: '#a78bfa',
+    Salud: '#4ade80', Supermercado: '#facc15', Compras: '#f472b6',
+    Servicios: '#38bdf8', Educación: '#fb923c', Viajes: '#2dd4bf', Otros: '#94a3b8',
   };
 
   const byCategory = rows.map((r) => ({
