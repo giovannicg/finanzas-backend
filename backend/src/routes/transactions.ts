@@ -280,7 +280,51 @@ router.patch('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
     return;
   }
 
-  const { amount, merchant, cardLast4, category, date } = req.body;
+  const { amount, merchant, cardLast4, category, date, installments } = req.body;
+  const months = installments ? parseInt(installments) : 1;
+
+  // Convertir transacción regular en cuotas
+  if (months > 1 && !tx.installmentGroupId) {
+    const totalAmount = amount !== undefined ? parseFloat(amount) : tx.amount;
+    const monthlyAmount = Math.round((totalAmount / months) * 100) / 100;
+    const groupId = randomUUID();
+    const startDate = date ? new Date(date) : new Date(tx.date);
+    const merchantName = merchant ?? tx.merchant;
+    const cat = category ?? tx.category;
+    const card = cardLast4 !== undefined ? (cardLast4 || null) : tx.cardLast4;
+
+    await prisma.transaction.delete({ where: { id: req.params.id } });
+
+    const txData = Array.from({ length: months }, (_, i) => {
+      const d = new Date(startDate);
+      d.setMonth(d.getMonth() + i);
+      return {
+        userId: req.userId!,
+        amount: monthlyAmount,
+        merchant: merchantName,
+        cardLast4: card,
+        category: cat,
+        rawText: `Manual: ${merchantName} (${i + 1}/${months})`,
+        date: d,
+        installments: months,
+        installmentNumber: i + 1,
+        installmentGroupId: groupId,
+      };
+    });
+
+    await prisma.transaction.createMany({ data: txData });
+
+    writeLog({
+      type: 'TRANSACTION',
+      level: 'INFO',
+      userId: req.userId,
+      message: `Transacción convertida a cuotas: ${merchantName} $${totalAmount} (${months} meses)`,
+      meta: { installmentGroupId: groupId, merchant: merchantName, totalAmount, months, monthlyAmount },
+    }).catch(() => {});
+
+    res.json({ installmentGroupId: groupId, count: months, monthlyAmount, totalAmount });
+    return;
+  }
 
   const updated = await prisma.transaction.update({
     where: { id: req.params.id },

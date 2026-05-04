@@ -118,8 +118,8 @@ export const transactions = {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  update: (id: string, data: Partial<{ amount: number; merchant: string; category: string; cardLast4: string; date: string }>) =>
-    request<Transaction>(`/api/transactions/${id}`, {
+  update: (id: string, data: Partial<{ amount: number; merchant: string; category: string; cardLast4: string; date: string; installments: number }>) =>
+    request<Transaction | { installmentGroupId: string; count: number; monthlyAmount: number; totalAmount: number }>(`/api/transactions/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     }),

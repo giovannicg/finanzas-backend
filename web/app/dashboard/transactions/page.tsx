@@ -26,12 +26,14 @@ function Modal({
   const [date, setDate] = useState(
     editing ? editing.date.split("T")[0] : new Date().toISOString().split("T")[0]
   );
-  const [installments, setInstallments] = useState("1");
+  const [installments, setInstallments] = useState(
+    editing ? String(editing.installments ?? 1) : "1"
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const monthlyPreview =
-    !editing && parseInt(installments) > 1 && parseFloat(amount) > 0
+    parseInt(installments) > 1 && parseFloat(amount) > 0
       ? (parseFloat(amount) / parseInt(installments)).toFixed(2)
       : null;
 
@@ -42,6 +44,7 @@ function Modal({
     try {
       const selectedCat = cats.find((c) => c.id === categoryId);
       const categoryName = selectedCat?.name ?? "";
+      const months = parseInt(installments);
       if (editing) {
         await transactions.update(editing.id, {
           amount: parseFloat(amount),
@@ -49,9 +52,9 @@ function Modal({
           category: categoryName,
           cardLast4: last4 || undefined,
           date,
+          ...(months > 1 && !editing.installmentGroupId ? { installments: months } : {}),
         });
       } else {
-        const months = parseInt(installments);
         await transactions.create({
           amount: parseFloat(amount),
           merchant,
@@ -150,7 +153,14 @@ function Modal({
             </div>
           </div>
 
-          {!editing && (
+          {editing?.installmentGroupId ? (
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-400">Cuotas</label>
+              <div className="flex items-center gap-2 rounded-lg bg-gray-800 px-3 py-2 text-sm text-indigo-300 ring-1 ring-gray-700">
+                Cuota {editing.installmentNumber}/{editing.installments}
+              </div>
+            </div>
+          ) : (
             <div>
               <label className="mb-1 block text-xs font-medium text-gray-400">
                 Meses (cuotas)
