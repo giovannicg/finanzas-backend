@@ -26,8 +26,14 @@ function Modal({
   const [date, setDate] = useState(
     editing ? editing.date.split("T")[0] : new Date().toISOString().split("T")[0]
   );
+  const [installments, setInstallments] = useState("1");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const monthlyPreview =
+    !editing && parseInt(installments) > 1 && parseFloat(amount) > 0
+      ? (parseFloat(amount) / parseInt(installments)).toFixed(2)
+      : null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,12 +51,14 @@ function Modal({
           date,
         });
       } else {
+        const months = parseInt(installments);
         await transactions.create({
           amount: parseFloat(amount),
           merchant,
           category: categoryName,
           cardLast4: last4 || undefined,
           date,
+          ...(months > 1 ? { installments: months } : {}),
         });
       }
       onSave();
@@ -142,6 +150,29 @@ function Modal({
             </div>
           </div>
 
+          {!editing && (
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-400">
+                Meses (cuotas)
+              </label>
+              <input
+                type="number"
+                inputMode="numeric"
+                min="1"
+                max="48"
+                value={installments}
+                onChange={(e) => setInstallments(e.target.value)}
+                className="w-full rounded-lg bg-gray-800 px-3 py-2 text-sm text-white outline-none ring-1 ring-gray-700 focus:ring-indigo-500"
+                placeholder="1"
+              />
+              {monthlyPreview && (
+                <p className="mt-1.5 text-xs text-emerald-400">
+                  ${monthlyPreview}/mes × {installments} meses = ${parseFloat(amount).toFixed(2)} total
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="flex gap-3 pt-2">
             <button
               type="button"
@@ -209,9 +240,17 @@ export default function TransactionsPage() {
   // Reset to page 1 when filters change
   useEffect(() => { setPage(1); }, [filterCat, filterFrom, filterTo]);
 
-  async function handleDelete(id: string) {
-    if (!confirm("¿Eliminar esta transacción?")) return;
-    await transactions.remove(id);
+  async function handleDelete(id: string, tx?: Transaction) {
+    if (tx?.installmentGroupId) {
+      const choice = confirm(
+        `Esta transacción es la cuota ${tx.installmentNumber}/${tx.installments} de "${tx.merchant}".\n\n` +
+        `¿Eliminar TODAS las cuotas? (Aceptar = eliminar todas, Cancelar = solo esta cuota)`
+      );
+      await transactions.remove(id, choice);
+    } else {
+      if (!confirm("¿Eliminar esta transacción?")) return;
+      await transactions.remove(id);
+    }
     load();
   }
 
@@ -351,7 +390,7 @@ export default function TransactionsPage() {
                       tx={tx}
                       catColor={cats.find((c) => c.name === tx.category)?.color}
                       onEdit={handleEdit}
-                      onDelete={handleDelete}
+                      onDelete={(id) => handleDelete(id, tx)}
                     />
                   ))}
                 </tbody>

@@ -34,20 +34,24 @@ model ApiToken {
 }
 
 model Transaction {
-  id         String   @id @default(uuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  amount     Float
-  merchant   String
-  cardLast4  String?
-  category   String
-  rawText    String
-  date       DateTime
-  createdAt  DateTime @default(now())
+  id                 String   @id @default(uuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id])
+  amount             Float
+  merchant           String
+  cardLast4          String?
+  category           String
+  rawText            String
+  date               DateTime
+  createdAt          DateTime @default(now())
+  installments       Int?     // total de cuotas (null = pago normal)
+  installmentNumber  Int?     // número de esta cuota (1-based)
+  installmentGroupId String?  // agrupa todas las cuotas relacionadas
 
   @@index([userId])
   @@index([userId, date])
   @@index([userId, category])
+  @@index([installmentGroupId])
 }
 
 model Alert {

@@ -20,6 +20,9 @@ export default function TransactionRow({ tx, catColor, onEdit, onDelete }: Props
   const catName = typeof tx.category === "string" ? tx.category : (tx.category as unknown as { name: string })?.name;
   const color = catColor ?? "#64748b";
   const amountStr = `$${tx.amount.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+  const installmentBadge = tx.installmentNumber && tx.installments
+    ? `${tx.installmentNumber}/${tx.installments}`
+    : null;
 
   return (
     <>
@@ -28,7 +31,14 @@ export default function TransactionRow({ tx, catColor, onEdit, onDelete }: Props
         <td colSpan={99} className="py-3">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-white">{tx.merchant}</p>
+              <div className="flex items-center gap-2">
+                <p className="truncate text-sm font-medium text-white">{tx.merchant}</p>
+                {installmentBadge && (
+                  <span className="shrink-0 rounded bg-indigo-900/60 px-1.5 py-0.5 text-xs font-medium text-indigo-300">
+                    {installmentBadge}
+                  </span>
+                )}
+              </div>
               <p className="mt-0.5 text-xs text-gray-400">{formatted}</p>
               {catName && (
                 <div className="mt-1.5">
@@ -64,7 +74,16 @@ export default function TransactionRow({ tx, catColor, onEdit, onDelete }: Props
       {/* Desktop table row */}
       <tr className="hidden sm:table-row border-b border-gray-800 hover:bg-gray-800/40">
         <td className="py-3 pr-4 text-sm text-gray-300">{formatted}</td>
-        <td className="py-3 pr-4 text-sm font-medium text-white">{tx.merchant}</td>
+        <td className="py-3 pr-4 text-sm font-medium text-white">
+          <div className="flex items-center gap-2">
+            {tx.merchant}
+            {installmentBadge && (
+              <span className="rounded bg-indigo-900/60 px-1.5 py-0.5 text-xs font-medium text-indigo-300">
+                {installmentBadge}
+              </span>
+            )}
+          </div>
+        </td>
         <td className="py-3 pr-4">
           {catName && <CategoryBadge name={catName} color={color} />}
         </td>

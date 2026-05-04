@@ -83,6 +83,9 @@ export interface Transaction {
   cardLast4?: string;
   date: string;
   category: string;
+  installments?: number;
+  installmentNumber?: number;
+  installmentGroupId?: string;
 }
 
 export interface TransactionSummary {
@@ -109,8 +112,9 @@ export const transactions = {
     category: string;
     cardLast4?: string;
     date?: string;
+    installments?: number;
   }) =>
-    request<Transaction>("/api/transactions", {
+    request<Transaction | { installmentGroupId: string; count: number; monthlyAmount: number; totalAmount: number }>("/api/transactions", {
       method: "POST",
       body: JSON.stringify(data),
     }),
@@ -119,8 +123,8 @@ export const transactions = {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
-  remove: (id: string) =>
-    request<void>(`/api/transactions/${id}`, { method: "DELETE" }),
+  remove: (id: string, all?: boolean) =>
+    request<void>(`/api/transactions/${id}${all ? "?all=true" : ""}`, { method: "DELETE" }),
 };
 
 // ── Categories ────────────────────────────────────────────────────────────────

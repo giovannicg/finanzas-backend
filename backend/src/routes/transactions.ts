@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { randomUUID } from 'crypto';
 import ExcelJS from 'exceljs';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { checkAlerts } from '../services/alertChecker';
@@ -42,17 +43,62 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 
 // POST /api/transactions
 router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { amount, merchant, cardLast4, category, date } = req.body;
+  const { amount, merchant, cardLast4, category, date, installments } = req.body;
 
   if (!amount || !merchant || !category) {
     res.status(400).json({ error: 'amount, merchant y category son requeridos' });
     return;
   }
 
+  const totalAmount = parseFloat(amount);
+  const months = installments ? parseInt(installments) : 1;
+
+  if (months > 1) {
+    // Pago en cuotas: crear una transacción por cada mes
+    const monthlyAmount = Math.round((totalAmount / months) * 100) / 100;
+    const groupId = randomUUID();
+    const startDate = date ? new Date(date) : new Date();
+
+    const txData = Array.from({ length: months }, (_, i) => {
+      const d = new Date(startDate);
+      d.setMonth(d.getMonth() + i);
+      return {
+        userId: req.userId!,
+        amount: monthlyAmount,
+        merchant,
+        cardLast4: cardLast4 || null,
+        category,
+        rawText: `Manual: ${merchant} (${i + 1}/${months})`,
+        date: d,
+        installments: months,
+        installmentNumber: i + 1,
+        installmentGroupId: groupId,
+      };
+    });
+
+    await prisma.transaction.createMany({ data: txData });
+
+    checkAlerts(req.userId!, category).catch((e) =>
+      console.error('[alerts] Error chequeando alertas:', e)
+    );
+
+    writeLog({
+      type: 'TRANSACTION',
+      level: 'INFO',
+      userId: req.userId,
+      message: `Transacción en cuotas creada: ${merchant} $${totalAmount} (${months} meses)`,
+      meta: { installmentGroupId: groupId, merchant, totalAmount, months, monthlyAmount, category },
+    }).catch(() => {});
+
+    res.status(201).json({ installmentGroupId: groupId, count: months, monthlyAmount, totalAmount });
+    return;
+  }
+
+  // Pago normal (sin cuotas)
   const tx = await prisma.transaction.create({
     data: {
       userId: req.userId!,
-      amount: parseFloat(amount),
+      amount: totalAmount,
       merchant,
       cardLast4: cardLast4 || null,
       category,
@@ -61,7 +107,6 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
     },
   });
 
-  // Check budget alerts (fire-and-forget, no bloquear la respuesta)
   checkAlerts(req.userId!, category).catch((e) =>
     console.error('[alerts] Error chequeando alertas:', e)
   );
@@ -274,6 +319,7 @@ router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
 });
 
 // DELETE /api/transactions/:id
+// Query param: ?all=true → elimina todas las cuotas del mismo grupo
 router.delete('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
   const tx = await prisma.transaction.findFirst({
     where: { id: req.params.id, userId: req.userId },
@@ -284,15 +330,27 @@ router.delete('/:id', async (req: AuthRequest, res: Response): Promise<void> => 
     return;
   }
 
-  await prisma.transaction.delete({ where: { id: req.params.id } });
-
-  writeLog({
-    type: 'TRANSACTION',
-    level: 'WARN',
-    userId: req.userId,
-    message: `Transacción eliminada: ${tx.merchant} $${tx.amount}`,
-    meta: { transactionId: tx.id, merchant: tx.merchant, amount: tx.amount },
-  }).catch(() => {});
+  if (req.query.all === 'true' && tx.installmentGroupId) {
+    await prisma.transaction.deleteMany({
+      where: { installmentGroupId: tx.installmentGroupId, userId: req.userId },
+    });
+    writeLog({
+      type: 'TRANSACTION',
+      level: 'WARN',
+      userId: req.userId,
+      message: `Cuotas eliminadas: ${tx.merchant} (grupo ${tx.installmentGroupId})`,
+      meta: { installmentGroupId: tx.installmentGroupId, merchant: tx.merchant },
+    }).catch(() => {});
+  } else {
+    await prisma.transaction.delete({ where: { id: req.params.id } });
+    writeLog({
+      type: 'TRANSACTION',
+      level: 'WARN',
+      userId: req.userId,
+      message: `Transacción eliminada: ${tx.merchant} $${tx.amount}`,
+      meta: { transactionId: tx.id, merchant: tx.merchant, amount: tx.amount },
+    }).catch(() => {});
+  }
 
   res.status(204).send();
 });
