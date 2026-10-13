@@ -1,4 +1,4 @@
-import { Pencil, X } from "lucide-react";
+import { MapPin, Pencil, X } from "lucide-react";
 import type { Transaction } from "@/lib/api";
 import CategoryBadge from "./CategoryBadge";
 
@@ -23,6 +23,23 @@ export default function TransactionRow({ tx, catColor, onEdit, onDelete }: Props
   const installmentBadge = tx.installmentNumber && tx.installments
     ? `${tx.installmentNumber}/${tx.installments}`
     : null;
+  const hasCoords = tx.latitude != null && tx.longitude != null;
+  const mapUrl = hasCoords
+    ? `https://www.google.com/maps/search/?api=1&query=${tx.latitude},${tx.longitude}`
+    : null;
+  const locationLabel = tx.locationName || "Ver en mapa";
+  const locationLink = mapUrl && (
+    <a
+      href={mapUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex min-w-0 items-center gap-1 text-xs text-gray-400 transition hover:text-indigo-400"
+      title={locationLabel}
+    >
+      <MapPin size={12} className="shrink-0" />
+      <span className="truncate">{locationLabel}</span>
+    </a>
+  );
 
   return (
     <>
@@ -40,6 +57,7 @@ export default function TransactionRow({ tx, catColor, onEdit, onDelete }: Props
                 )}
               </div>
               <p className="mt-0.5 text-xs text-gray-400">{formatted}</p>
+              {locationLink && <div className="mt-0.5 max-w-full">{locationLink}</div>}
               {catName && (
                 <div className="mt-1.5">
                   <CategoryBadge name={catName} color={color} />
@@ -83,6 +101,7 @@ export default function TransactionRow({ tx, catColor, onEdit, onDelete }: Props
               </span>
             )}
           </div>
+          {locationLink && <div className="mt-0.5 max-w-xs font-normal">{locationLink}</div>}
         </td>
         <td className="py-3 pr-4">
           {catName && <CategoryBadge name={catName} color={color} />}

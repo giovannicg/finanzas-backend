@@ -11,13 +11,21 @@ import { checkAlerts } from '../services/alertChecker';
 
 const router = Router();
 
+// Atajos de iPhone en español puede mandar "-0,1807" (coma decimal) o números como texto.
+function parseCoord(value: unknown, max: number): number | null {
+  if (value === undefined || value === null || value === '') return null;
+  const n = typeof value === 'number' ? value : Number(String(value).trim().replace(',', '.'));
+  return Number.isFinite(n) && Math.abs(n) <= max ? n : null;
+}
+
 /**
  * POST /api/webhook/sms
  * Called directly from iPhone Shortcuts when an SMS arrives.
- * Body: { token: string (JWT), text: string (SMS content) }
+ * Body: { token: string (JWT o fin_...), text: string (SMS content),
+ *         lat?, lng?: number | string, location?: string (dirección) }
  */
 router.post('/sms', async (req: Request, res: Response): Promise<void> => {
-  const { token, text } = req.body;
+  const { token, text, lat, lng, location } = req.body;
 
   if (!token || !text) {
     res.status(400).json({ error: 'token y text son requeridos' });
@@ -61,6 +69,9 @@ router.post('/sms', async (req: Request, res: Response): Promise<void> => {
       category,
       rawText: parsed.rawText,
       date: parsed.date,
+      latitude: parseCoord(lat, 90),
+      longitude: parseCoord(lng, 180),
+      locationName: typeof location === 'string' && location.trim() ? location.trim().slice(0, 300) : null,
     },
   });
 

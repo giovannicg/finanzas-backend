@@ -48,6 +48,9 @@ model Transaction {
   installments       Int?     // total de cuotas (null = pago normal)
   installmentNumber  Int?     // número de esta cuota (1-based)
   installmentGroupId String?  // agrupa todas las cuotas relacionadas
+  latitude           Float?   // ubicación del teléfono al llegar el SMS (opcional)
+  longitude          Float?
+  locationName       String?  // dirección legible enviada por el atajo
 
   @@index([userId])
   @@index([userId, date])

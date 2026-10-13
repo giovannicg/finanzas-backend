@@ -87,6 +87,9 @@ export interface Transaction {
   installments?: number;
   installmentNumber?: number;
   installmentGroupId?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  locationName?: string | null;
 }
 
 export interface TransactionSummary {

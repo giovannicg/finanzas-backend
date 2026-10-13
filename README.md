@@ -98,14 +98,25 @@ curl -s -X POST https://TU-URL.up.railway.app/api/auth/login \
 ① Acción: "Texto"
    Contenido: [Contenido del mensaje]  ← variable del trigger
 
-② Acción: "Obtener contenido de URL"
-   URL: https://TU-URL.up.railway.app/api/webhook/sms
+② Acción: "Obtener ubicación actual"        ← opcional, para saber dónde gastaste
+
+③ Acción: "Obtener detalles de ubicaciones" → Dirección   (de la ubicación del paso ②)
+
+④ Acción: "Obtener contenido de URL"
+   URL: https://finanzas-backend-ten.vercel.app/api/webhook/sms
    Método: POST
    Tipo de solicitud: JSON
    Cuerpo:
-     token  →  "eyJhbGci...tu_token_jwt"
-     text   →  [Texto del paso ①]
+     token     →  "fin_...tu_api_token"     (Dashboard → Tokens)
+     text      →  [Texto del paso ①]
+     lat       →  [Ubicación actual → Latitud]
+     lng       →  [Ubicación actual → Longitud]
+     location  →  [Dirección del paso ③]
 ```
+
+`lat`, `lng` y `location` son opcionales. Acepta números con coma o punto decimal.
+La primera vez, iOS pide permiso de ubicación para Atajos: elige **"Permitir siempre"**
+o la automatización no podrá leerla en segundo plano.
 
 ### Para tu novia
 
