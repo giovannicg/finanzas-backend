@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
+import { background } from '../lib/background';
 import { extractSMSText, extractInboxEmail } from '../services/emailParser';
 import { parseSMS } from '../services/smsParser';
 import { categorize } from '../services/categorizer';
@@ -9,7 +10,6 @@ import { syncToNotion } from '../services/notionSync';
 import { checkAlerts } from '../services/alertChecker';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 /**
  * POST /api/webhook/sms
@@ -32,7 +32,7 @@ router.post('/sms', async (req: Request, res: Response): Promise<void> => {
       res.status(401).json({ error: 'API token inválido' });
       return;
     }
-    prisma.apiToken.update({ where: { id: apiToken.id }, data: { lastUsedAt: new Date() } }).catch(() => {});
+    background(prisma.apiToken.update({ where: { id: apiToken.id }, data: { lastUsedAt: new Date() } }));
     userId = apiToken.userId;
   } else {
     try {
@@ -65,7 +65,7 @@ router.post('/sms', async (req: Request, res: Response): Promise<void> => {
   });
 
   await checkAlerts(userId, category);
-  syncToNotion({ amount: parsed.amount, merchant: parsed.merchant, category, cardLast4: parsed.cardLast4, date: parsed.date, rawText: parsed.rawText });
+  background(syncToNotion({ amount: parsed.amount, merchant: parsed.merchant, category, cardLast4: parsed.cardLast4, date: parsed.date, rawText: parsed.rawText }));
 
   res.status(200).json({ transactionId: transaction.id, category, amount: parsed.amount, merchant: parsed.merchant });
 });
@@ -126,7 +126,7 @@ router.post('/email', async (req: Request, res: Response): Promise<void> => {
   await checkAlerts(user.id, category);
 
   // Sync to Notion (optional, only if configured)
-  syncToNotion({ amount: parsed.amount, merchant: parsed.merchant, category, cardLast4: parsed.cardLast4, date: parsed.date, rawText: parsed.rawText });
+  background(syncToNotion({ amount: parsed.amount, merchant: parsed.merchant, category, cardLast4: parsed.cardLast4, date: parsed.date, rawText: parsed.rawText }));
 
   res.status(200).json({ transactionId: transaction.id });
 });

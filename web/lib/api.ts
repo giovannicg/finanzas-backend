@@ -1,4 +1,5 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+// Vacío = mismo dominio (/api/...). Define NEXT_PUBLIC_API_URL solo para apuntar a otro backend.
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -22,7 +23,7 @@ async function request<T>(
   try {
     res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
   } catch {
-    throw new Error(`No se pudo conectar al servidor (${BASE_URL}). Verifica que el backend esté corriendo.`);
+    throw new Error(`No se pudo conectar al servidor (${BASE_URL || window.location.origin}). Verifica que el backend esté corriendo.`);
   }
 
   if (res.status === 401) {

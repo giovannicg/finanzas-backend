@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
+import { background } from '../lib/background';
 
-const prisma = new PrismaClient();
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -27,7 +27,7 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
       return;
     }
     // Actualizar lastUsedAt sin bloquear
-    prisma.apiToken.update({ where: { id: apiToken.id }, data: { lastUsedAt: new Date() } }).catch(() => {});
+    background(prisma.apiToken.update({ where: { id: apiToken.id }, data: { lastUsedAt: new Date() } }));
     req.userId = apiToken.userId;
     next();
     return;

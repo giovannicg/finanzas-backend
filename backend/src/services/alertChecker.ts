@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { sendBudgetAlert } from './emailService';
 
-const prisma = new PrismaClient();
 
 export async function checkAlerts(userId: string, category: string): Promise<void> {
   const alerts = await prisma.alert.findMany({

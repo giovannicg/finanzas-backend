@@ -205,7 +205,8 @@ function Modal({
   );
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+// Vacío = mismo dominio (/api/...). Define NEXT_PUBLIC_API_URL solo para apuntar a otro backend.
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 export default function TransactionsPage() {
   const [txs, setTxs] = useState<Transaction[]>([]);

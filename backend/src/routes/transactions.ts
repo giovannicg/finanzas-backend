@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
+import { background } from '../lib/background';
 import { randomUUID } from 'crypto';
 import ExcelJS from 'exceljs';
 import { authenticate, AuthRequest } from '../middleware/auth';
@@ -7,7 +8,6 @@ import { checkAlerts } from '../services/alertChecker';
 import { writeLog } from '../services/logger';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 router.use(authenticate);
 
@@ -78,9 +78,7 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
 
     await prisma.transaction.createMany({ data: txData });
 
-    checkAlerts(req.userId!, category).catch((e) =>
-      console.error('[alerts] Error chequeando alertas:', e)
-    );
+    background(checkAlerts(req.userId!, category));
 
     writeLog({
       type: 'TRANSACTION',
@@ -107,9 +105,7 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
     },
   });
 
-  checkAlerts(req.userId!, category).catch((e) =>
-    console.error('[alerts] Error chequeando alertas:', e)
-  );
+  background(checkAlerts(req.userId!, category));
 
   writeLog({
     type: 'TRANSACTION',

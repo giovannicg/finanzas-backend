@@ -1,6 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
+import { background } from '../lib/background';
 
 type LogType = 'AUTH' | 'TRANSACTION' | 'REQUEST' | 'ERROR';
 type LogLevel = 'INFO' | 'WARN' | 'ERROR';
@@ -18,7 +17,7 @@ interface LogParams {
 }
 
 export async function writeLog(params: LogParams): Promise<void> {
-  await prisma.log.create({
+  const task = prisma.log.create({
     data: {
       type: params.type,
       level: params.level ?? 'INFO',
@@ -31,4 +30,6 @@ export async function writeLog(params: LogParams): Promise<void> {
       meta: params.meta ? JSON.parse(JSON.stringify(params.meta)) : undefined,
     },
   }).catch((e) => console.error('[logger] Error escribiendo log:', e));
+  background(task);
+  await task;
 }

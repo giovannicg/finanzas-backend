@@ -4,3 +4,6 @@ dist/
 *.env.local
 .expo/
 .claude/
+
+# Backups de BD (contienen datos reales)
+*.dump
