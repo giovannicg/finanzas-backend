@@ -7,3 +7,6 @@ dist/
 
 # Backups de BD (contienen datos reales)
 *.dump
+.vercel
+.env*
+!.env.example
