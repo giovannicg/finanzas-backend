@@ -10,6 +10,11 @@ import usersRouter from './routes/users';
 import webhookRouter from './routes/webhook';
 import logsRouter from './routes/logs';
 import apiTokensRouter from './routes/apiTokens';
+import incomesRouter from './routes/incomes';
+import fixedExpensesRouter from './routes/fixedExpenses';
+import plannedEventsRouter from './routes/plannedEvents';
+import fundsRouter from './routes/funds';
+import budgetRouter from './routes/budget';
 import { requestLogger } from './middleware/requestLogger';
 
 const app = express();
@@ -30,6 +35,11 @@ app.use('/api/categories', categoriesRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/logs', logsRouter);
 app.use('/api/tokens', apiTokensRouter);
+app.use('/api/incomes', incomesRouter);
+app.use('/api/fixed-expenses', fixedExpensesRouter);
+app.use('/api/planned-events', plannedEventsRouter);
+app.use('/api/funds', fundsRouter);
+app.use('/api/budget', budgetRouter);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 

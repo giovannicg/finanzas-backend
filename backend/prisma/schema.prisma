@@ -9,17 +9,24 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(uuid())
-  email        String        @unique
-  password     String
-  inboxEmail   String        @unique
-  pushToken    String?
-  totalBudget  Float?
-  transactions Transaction[]
-  alerts       Alert[]
-  categories   Category[]
-  apiTokens    ApiToken[]
-  createdAt    DateTime      @default(now())
+  id             String         @id @default(uuid())
+  email          String         @unique
+  password       String
+  inboxEmail     String         @unique
+  pushToken      String?
+  totalBudget    Float?
+  currency       String         @default("USD")
+  locale         String         @default("en-US")
+  onboardingStep Int            @default(0) // 0 = sin empezar, 6 = completado
+  transactions   Transaction[]
+  alerts         Alert[]
+  categories     Category[]
+  apiTokens      ApiToken[]
+  incomes        Income[]
+  fixedExpenses  FixedExpense[]
+  funds          Fund[]
+  plannedEvents  PlannedEvent[]
+  createdAt      DateTime       @default(now())
 }
 
 model ApiToken {
@@ -52,7 +59,20 @@ model Transaction {
   longitude          Float?
   locationName       String?  // dirección legible enviada por el atajo
 
+  // Clasificación del gasto (sección 1 del plan financiero)
+  // "FIXED"      → gasto fijo mensual
+  // "PLANNED"    → gasto previsible no mensual (cumpleaños, Navidad, seguro anual…)
+  // "VARIABLE"   → gasto variable cotidiano (café, restaurante, ocio…)
+  // "UNEXPECTED" → gasto imprevisto (avería, urgencia médica…)
+  expenseType    String        @default("VARIABLE")
+  plannedEventId String?
+  plannedEvent   PlannedEvent? @relation(fields: [plannedEventId], references: [id])
+  fixedExpenseId String?
+  fixedExpense   FixedExpense? @relation(fields: [fixedExpenseId], references: [id])
+
   @@index([userId])
+  @@index([userId, expenseType])
+  @@index([plannedEventId])
   @@index([userId, date])
   @@index([userId, category])
   @@index([installmentGroupId])
@@ -100,4 +120,99 @@ model Log {
   @@index([userId])
   @@index([type])
   @@index([level])
+}
+
+// ─── Fase 1: motor de presupuesto, provisiones y fondos ──────────────────────
+// Convención de dinero: `Fund.balance` es dinero real reservado. La provisión
+// mensual de un evento NO es un gasto: es una transferencia a un fondo. El gasto
+// solo existe cuando se crea una Transaction. `PlannedEvent.savedAmount` es el
+// dinero de un fondo etiquetado para ese evento concreto, nunca dinero adicional.
+
+model Income {
+  id                 String    @id @default(uuid())
+  userId             String
+  user               User      @relation(fields: [userId], references: [id])
+  name               String
+  type               String    @default("SALARY") // "SALARY" | "SECONDARY" | "EXTRAORDINARY" | "OTHER"
+  amount             Float     // importe habitual o esperado
+  isVariable         Boolean   @default(false)
+  conservativeAmount Float?    // estimación prudente usada para planificar si isVariable
+  frequency          String    @default("MONTHLY") // "MONTHLY" | "ONE_TIME"
+  dayOfMonth         Int?      // día de cobro (solo MONTHLY)
+  receivedOn         DateTime? // fecha del ingreso (solo ONE_TIME)
+  active             Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model FixedExpense {
+  id               String        @id @default(uuid())
+  userId           String
+  user             User          @relation(fields: [userId], references: [id])
+  name             String
+  category         String
+  amount           Float         // importe fijo, o estimación mensual si isVariableAmount
+  isVariableAmount Boolean       @default(false) // luz, agua, supermercado…
+  dayOfMonth       Int?
+  active           Boolean       @default(true)
+  createdAt        DateTime      @default(now())
+  transactions     Transaction[]
+
+  @@index([userId])
+}
+
+model Fund {
+  id                  String         @id @default(uuid())
+  userId              String
+  user                User           @relation(fields: [userId], references: [id])
+  name                String
+  type                String         @default("GOAL") // "BIRTHDAYS"|"CHRISTMAS"|"VACATION"|"ANNUAL"|"EMERGENCY"|"GOAL"|"INVESTMENT"
+  targetAmount        Float?
+  balance             Float          @default(0)
+  targetDate          DateTime?
+  monthlyContribution Float?         // aportación mensual decidida por el usuario
+  events              PlannedEvent[]
+  movements           FundMovement[]
+  createdAt           DateTime       @default(now())
+
+  @@index([userId])
+}
+
+model FundMovement {
+  id             String        @id @default(uuid())
+  fundId         String
+  fund           Fund          @relation(fields: [fundId], references: [id], onDelete: Cascade)
+  amount         Float         // siempre positivo
+  type           String        // "DEPOSIT" | "WITHDRAWAL"
+  date           DateTime      @default(now())
+  note           String?
+  plannedEventId String?
+  plannedEvent   PlannedEvent? @relation(fields: [plannedEventId], references: [id])
+  createdAt      DateTime      @default(now())
+
+  @@index([fundId])
+  @@index([plannedEventId])
+}
+
+model PlannedEvent {
+  id              String         @id @default(uuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id])
+  name            String
+  type            String         @default("OTHER") // "BIRTHDAY"|"CHRISTMAS"|"ANNIVERSARY"|"VACATION"|"INSURANCE"|"DOCUMENT"|"MAINTENANCE"|"CELEBRATION"|"OTHER"
+  eventDate       DateTime
+  yearlyRecurring Boolean        @default(true)
+  budgetAmount    Float
+  savedAmount     Float          @default(0) // dinero ya reservado para este evento
+  fundId          String?
+  fund            Fund?          @relation(fields: [fundId], references: [id])
+  notes           String?
+  active          Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  movements       FundMovement[]
+  transactions    Transaction[]
+
+  @@index([userId])
+  @@index([userId, eventDate])
 }

@@ -5,7 +5,7 @@ import { prisma } from '../lib/prisma';
 import { background } from '../lib/background';
 import { extractSMSText, extractInboxEmail } from '../services/emailParser';
 import { parseSMS } from '../services/smsParser';
-import { categorize } from '../services/categorizer';
+import { categorize, inferExpenseType } from '../services/categorizer';
 import { syncToNotion } from '../services/notionSync';
 import { checkAlerts } from '../services/alertChecker';
 
@@ -59,6 +59,7 @@ router.post('/sms', async (req: Request, res: Response): Promise<void> => {
   }
 
   const category = categorize(parsed.merchant, parsed.rawText);
+  const expenseType = inferExpenseType(parsed.merchant, parsed.rawText);
 
   const transaction = await prisma.transaction.create({
     data: {
@@ -69,6 +70,7 @@ router.post('/sms', async (req: Request, res: Response): Promise<void> => {
       category,
       rawText: parsed.rawText,
       date: parsed.date,
+      expenseType,
       latitude: parseCoord(lat, 90),
       longitude: parseCoord(lng, 180),
       locationName: typeof location === 'string' && location.trim() ? location.trim().slice(0, 300) : null,
@@ -120,6 +122,7 @@ router.post('/email', async (req: Request, res: Response): Promise<void> => {
   }
 
   const category = categorize(parsed.merchant, parsed.rawText);
+  const expenseType = inferExpenseType(parsed.merchant, parsed.rawText);
 
   const transaction = await prisma.transaction.create({
     data: {
@@ -130,6 +133,7 @@ router.post('/email', async (req: Request, res: Response): Promise<void> => {
       category,
       rawText: parsed.rawText,
       date: parsed.date,
+      expenseType,
     },
   });
 

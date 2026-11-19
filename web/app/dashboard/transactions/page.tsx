@@ -2,7 +2,14 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { X } from "lucide-react";
-import { transactions, categories, type Transaction, type Category } from "@/lib/api";
+import {
+  transactions,
+  categories,
+  EXPENSE_TYPE_LABELS,
+  type Transaction,
+  type Category,
+  type ExpenseType,
+} from "@/lib/api";
 import TransactionRow from "@/components/TransactionRow";
 
 function Modal({
@@ -29,6 +36,9 @@ function Modal({
   const [installments, setInstallments] = useState(
     editing ? String(editing.installments ?? 1) : "1"
   );
+  const [expenseType, setExpenseType] = useState<ExpenseType>(
+    editing?.expenseType ?? "VARIABLE"
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -50,6 +60,7 @@ function Modal({
           amount: parseFloat(amount),
           merchant,
           category: categoryName,
+          expenseType,
           cardLast4: last4 || undefined,
           date,
           ...(months > 1 && !editing.installmentGroupId ? { installments: months } : {}),
@@ -59,6 +70,7 @@ function Modal({
           amount: parseFloat(amount),
           merchant,
           category: categoryName,
+          expenseType,
           cardLast4: last4 || undefined,
           date,
           ...(months > 1 ? { installments: months } : {}),
@@ -151,6 +163,22 @@ function Modal({
                 className="w-full rounded-lg bg-gray-800 px-3 py-2 text-sm text-white outline-none ring-1 ring-gray-700 focus:ring-indigo-500"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-400">Tipo de gasto</label>
+            <select
+              value={expenseType}
+              onChange={(e) => setExpenseType(e.target.value as ExpenseType)}
+              className="w-full rounded-lg bg-gray-800 px-3 py-2 text-sm text-white outline-none ring-1 ring-gray-700 focus:ring-indigo-500"
+            >
+              {(Object.keys(EXPENSE_TYPE_LABELS) as ExpenseType[]).map((t) => (
+                <option key={t} value={t}>{EXPENSE_TYPE_LABELS[t]}</option>
+              ))}
+            </select>
+            <span className="mt-1 block text-xs text-gray-500">
+              Los imprevistos se contabilizan aparte y nunca se mezclan con los previsibles.
+            </span>
           </div>
 
           {editing?.installmentGroupId ? (

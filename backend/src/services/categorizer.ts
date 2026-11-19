@@ -112,3 +112,56 @@ export function categorize(merchant: string, rawText: string = ''): Category {
 
   return 'Otros';
 }
+
+// ─── Clasificación por tipo de gasto (sección 1 del plan financiero) ─────────
+
+export type ExpenseType = 'FIXED' | 'PLANNED' | 'VARIABLE' | 'UNEXPECTED';
+
+/**
+ * Comercios que casi siempre son un compromiso mensual recurrente. Se usan para
+ * marcar automáticamente el gasto como FIXED cuando llega por SMS, de modo que
+ * una suscripción no contamine el presupuesto de gasto variable cotidiano.
+ */
+const FIXED_KEYWORDS = [
+  // Suscripciones
+  'netflix', 'spotify', 'apple.com/bill', 'apple store bill', 'itunes',
+  'icloud', 'apple tv', 'disney', 'disney+', 'hbo', 'hbo max', 'max.com',
+  'amazon prime', 'prime video', 'youtube premium', 'deezer', 'tidal',
+  'dropbox', 'google one', 'microsoft 365', 'adobe', 'chatgpt', 'openai',
+  // Servicios del hogar y comunicaciones
+  'cfe', 'iberdrola', 'endesa', 'naturgy', 'gas natural', 'luz', 'agua',
+  'telmex', 'telcel', 'movistar', 'vodafone', 'orange', 'at&t', 'izzi',
+  'megacable', 'totalplay', 'internet', 'fibra',
+  // Vivienda, seguros y gimnasio
+  'alquiler', 'renta mensual', 'hipoteca', 'seguro', 'poliza', 'póliza',
+  'gimnasio', 'smartfit', 'smart fit', 'sport city', 'basic fit',
+];
+
+/**
+ * Comercios que señalan un gasto imprevisto, no un consumo del día a día.
+ * Nunca se marca algo como PLANNED automáticamente: un gasto previsible se
+ * liquida siempre contra un evento concreto que el usuario ha creado.
+ */
+const UNEXPECTED_KEYWORDS = [
+  'urgencias', 'emergencia', 'hospital', 'ambulancia', 'grua', 'grúa',
+  'taller', 'mecanico', 'mecánico', 'reparacion', 'reparación', 'refaccion',
+  'refacción', 'fontanero', 'plomero', 'electricista', 'cerrajero',
+  'veterinario', 'veterinaria',
+];
+
+/**
+ * Deduce el tipo de gasto a partir del comercio. Por defecto VARIABLE, que es
+ * el caso más común y el único que el usuario controla con sus decisiones
+ * diarias. El usuario siempre puede reclasificar la transacción después.
+ */
+export function inferExpenseType(merchant: string, rawText: string = ''): ExpenseType {
+  const haystack = `${merchant} ${rawText}`.toLowerCase();
+
+  for (const keyword of UNEXPECTED_KEYWORDS) {
+    if (haystack.includes(keyword)) return 'UNEXPECTED';
+  }
+  for (const keyword of FIXED_KEYWORDS) {
+    if (haystack.includes(keyword)) return 'FIXED';
+  }
+  return 'VARIABLE';
+}

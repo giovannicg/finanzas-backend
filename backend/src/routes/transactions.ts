@@ -6,6 +6,7 @@ import ExcelJS from 'exceljs';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { checkAlerts } from '../services/alertChecker';
 import { writeLog } from '../services/logger';
+import { EXPENSE_TYPES } from '../services/budget';
 
 const router = Router();
 
@@ -13,11 +14,12 @@ router.use(authenticate);
 
 // GET /api/transactions
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { category, from, to, page = '1', limit = '20' } = req.query;
+  const { category, expenseType, from, to, page = '1', limit = '20' } = req.query;
 
   const where: Record<string, unknown> = { userId: req.userId };
 
   if (category) where.category = category;
+  if (expenseType) where.expenseType = expenseType;
 
   if (from || to) {
     where.date = {
@@ -43,12 +45,18 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 
 // POST /api/transactions
 router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { amount, merchant, cardLast4, category, date, installments } = req.body;
+  const { amount, merchant, cardLast4, category, date, installments, expenseType } = req.body;
 
   if (!amount || !merchant || !category) {
     res.status(400).json({ error: 'amount, merchant y category son requeridos' });
     return;
   }
+
+  if (expenseType && !(EXPENSE_TYPES as readonly string[]).includes(expenseType)) {
+    res.status(400).json({ error: `expenseType debe ser uno de: ${EXPENSE_TYPES.join(', ')}` });
+    return;
+  }
+  const type = expenseType ?? 'VARIABLE';
 
   const totalAmount = parseFloat(amount);
   const months = installments ? parseInt(installments) : 1;
@@ -73,6 +81,7 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
         installments: months,
         installmentNumber: i + 1,
         installmentGroupId: groupId,
+        expenseType: type,
       };
     });
 
@@ -102,6 +111,7 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
       category,
       rawText: `Manual: ${merchant}`,
       date: date ? new Date(date) : new Date(),
+      expenseType: type,
     },
   });
 
@@ -276,8 +286,13 @@ router.patch('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
     return;
   }
 
-  const { amount, merchant, cardLast4, category, date, installments } = req.body;
+  const { amount, merchant, cardLast4, category, date, installments, expenseType } = req.body;
   const months = installments ? parseInt(installments) : 1;
+
+  if (expenseType && !(EXPENSE_TYPES as readonly string[]).includes(expenseType)) {
+    res.status(400).json({ error: `expenseType debe ser uno de: ${EXPENSE_TYPES.join(', ')}` });
+    return;
+  }
 
   // Convertir transacción regular en cuotas
   if (months > 1 && !tx.installmentGroupId) {
@@ -305,6 +320,7 @@ router.patch('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
         installments: months,
         installmentNumber: i + 1,
         installmentGroupId: groupId,
+        expenseType: expenseType ?? tx.expenseType,
       };
     });
 
@@ -330,6 +346,7 @@ router.patch('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
       ...(cardLast4 !== undefined ? { cardLast4: cardLast4 || null } : {}),
       ...(category !== undefined ? { category } : {}),
       ...(date !== undefined ? { date: new Date(date) } : {}),
+      ...(expenseType !== undefined ? { expenseType } : {}),
     },
   });
 

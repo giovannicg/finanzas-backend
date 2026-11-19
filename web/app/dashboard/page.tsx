@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { transactions, type TransactionSummary, type Transaction } from "@/lib/api";
+import Link from "next/link";
+import {
+  transactions,
+  userApi,
+  formatMoney,
+  type TransactionSummary,
+  type Transaction,
+  type UserProfile,
+} from "@/lib/api";
 import TransactionRow from "@/components/TransactionRow";
 import SpendingDonut from "@/components/SpendingDonut";
 import MonthlyBarChart from "@/components/MonthlyBarChart";
@@ -29,6 +37,7 @@ export default function DashboardPage() {
   const [summary, setSummary] = useState<TransactionSummary | null>(null);
   const [recent, setRecent] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -48,6 +57,13 @@ export default function DashboardPage() {
   }, [year, month]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    userApi
+      .me()
+      .then(setProfile)
+      .catch(() => { /* sin perfil se usa el formato por defecto y no hay aviso */ });
+  }, []);
 
   const years = Array.from({ length: 3 }, (_, i) => now.getFullYear() - i);
 
@@ -76,11 +92,27 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Configuración inicial a medias: sin ingresos ni gastos fijos el plan no
+          puede calcularse, así que conviene avisar antes que nada. */}
+      {profile !== null && profile.onboardingStep < 6 && (
+        <Link
+          href="/onboarding"
+          className="block rounded-xl bg-indigo-950/60 p-4 ring-1 ring-indigo-900 transition-colors hover:bg-indigo-950"
+        >
+          <p className="text-sm font-medium text-indigo-200">
+            Termina tu configuración inicial
+          </p>
+          <p className="mt-0.5 text-xs text-indigo-300/70">
+            Faltan datos para calcular tu plan mensual: ingresos, gastos fijos y celebraciones.
+          </p>
+        </Link>
+      )}
+
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KPICard
           label="Gasto total"
-          value={`$${(summary?.totalSpent ?? 0).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`}
+          value={formatMoney(summary?.totalSpent ?? 0, profile?.currency, profile?.locale)}
           sub={`${MONTHS[month - 1]} ${year}`}
         />
         <KPICard

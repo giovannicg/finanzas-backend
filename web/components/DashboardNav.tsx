@@ -3,14 +3,42 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clearToken } from "@/lib/auth";
-import { LayoutDashboard, ArrowLeftRight, Target, Tag, KeyRound, LogOut } from "lucide-react";
+import {
+  LayoutDashboard,
+  Wallet,
+  ArrowLeftRight,
+  Receipt,
+  CalendarClock,
+  PiggyBank,
+  TrendingUp,
+  Target,
+  Tag,
+  KeyRound,
+  Settings,
+  LogOut,
+} from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
+  { href: "/dashboard/plan", label: "Plan", Icon: Wallet },
   { href: "/dashboard/transactions", label: "Movimientos", Icon: ArrowLeftRight },
-  { href: "/dashboard/budgets", label: "Presupuestos", Icon: Target },
+  { href: "/dashboard/income", label: "Ingresos", Icon: TrendingUp },
+  { href: "/dashboard/fixed", label: "Gastos fijos", Icon: Receipt },
+  { href: "/dashboard/planned", label: "Previsibles", Icon: CalendarClock },
+  { href: "/dashboard/funds", label: "Fondos", Icon: PiggyBank },
+  { href: "/dashboard/budgets", label: "Límites", Icon: Target },
   { href: "/dashboard/categories", label: "Categorías", Icon: Tag },
   { href: "/dashboard/tokens", label: "API Tokens", Icon: KeyRound },
+  { href: "/onboarding", label: "Configuración", Icon: Settings },
+];
+
+/** En móvil no caben las once entradas; se muestran las más usadas. */
+const MOBILE_HREFS = [
+  "/dashboard",
+  "/dashboard/plan",
+  "/dashboard/transactions",
+  "/dashboard/planned",
+  "/dashboard/funds",
 ];
 
 export default function DashboardNav() {
@@ -22,7 +50,10 @@ export default function DashboardNav() {
   }
 
   function isActive(href: string) {
-    return href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
+    if (href === "/dashboard") return pathname === "/dashboard";
+    // Coincidencia por segmento completo: si no, "/dashboard/plan" también se
+    // activaría estando en "/dashboard/planned".
+    return pathname === href || pathname.startsWith(`${href}/`);
   }
 
   return (
@@ -32,7 +63,7 @@ export default function DashboardNav() {
         <div className="px-6 py-5">
           <span className="text-xl font-bold text-white">Finanzas</span>
         </div>
-        <nav className="flex-1 space-y-1 px-3 py-2">
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
           {navItems.map(({ href, label, Icon }) => (
             <Link
               key={href}
@@ -60,18 +91,20 @@ export default function DashboardNav() {
 
       {/* Mobile bottom nav */}
       <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-gray-800 bg-gray-900 px-1 py-2">
-        {navItems.map(({ href, label, Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className={`flex flex-col items-center gap-0.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
-              isActive(href) ? "text-indigo-400" : "text-gray-500"
-            }`}
-          >
-            <Icon size={20} />
-            <span>{label}</span>
-          </Link>
-        ))}
+        {navItems
+          .filter(({ href }) => MOBILE_HREFS.includes(href))
+          .map(({ href, label, Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`flex flex-col items-center gap-0.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+                isActive(href) ? "text-indigo-400" : "text-gray-500"
+              }`}
+            >
+              <Icon size={20} />
+              <span>{label}</span>
+            </Link>
+          ))}
         <button
           onClick={logout}
           className="flex flex-col items-center gap-0.5 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors cursor-pointer"
