@@ -9,6 +9,8 @@ import {
   ArrowLeftRight,
   Receipt,
   CalendarClock,
+  CalendarRange,
+  BarChart3,
   PiggyBank,
   TrendingUp,
   Target,
@@ -22,6 +24,8 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
   { href: "/dashboard/plan", label: "Plan", Icon: Wallet },
   { href: "/dashboard/transactions", label: "Movimientos", Icon: ArrowLeftRight },
+  { href: "/dashboard/reports", label: "Informes", Icon: BarChart3 },
+  { href: "/dashboard/calendar", label: "Calendario", Icon: CalendarRange },
   { href: "/dashboard/income", label: "Ingresos", Icon: TrendingUp },
   { href: "/dashboard/fixed", label: "Gastos fijos", Icon: Receipt },
   { href: "/dashboard/planned", label: "Previsibles", Icon: CalendarClock },
@@ -32,13 +36,13 @@ const navItems = [
   { href: "/onboarding", label: "Configuración", Icon: Settings },
 ];
 
-/** En móvil no caben las once entradas; se muestran las más usadas. */
+/** En móvil no caben las trece entradas; se muestran las más usadas. */
 const MOBILE_HREFS = [
   "/dashboard",
   "/dashboard/plan",
   "/dashboard/transactions",
+  "/dashboard/reports",
   "/dashboard/planned",
-  "/dashboard/funds",
 ];
 
 export default function DashboardNav() {

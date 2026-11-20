@@ -15,6 +15,7 @@ import fixedExpensesRouter from './routes/fixedExpenses';
 import plannedEventsRouter from './routes/plannedEvents';
 import fundsRouter from './routes/funds';
 import budgetRouter from './routes/budget';
+import reportsRouter from './routes/reports';
 import { requestLogger } from './middleware/requestLogger';
 
 const app = express();
@@ -40,6 +41,7 @@ app.use('/api/fixed-expenses', fixedExpensesRouter);
 app.use('/api/planned-events', plannedEventsRouter);
 app.use('/api/funds', fundsRouter);
 app.use('/api/budget', budgetRouter);
+app.use('/api/reports', reportsRouter);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 

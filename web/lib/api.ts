@@ -556,3 +556,146 @@ export const budget = {
   monthly: (year: number, month: number) =>
     request<MonthlyBudget>(`/api/budget/monthly?year=${year}&month=${month}`),
 };
+
+// ── Informes (análisis semanal y mensual) ─────────────────────────────────────
+
+export type ReportPeriodType = "week" | "month";
+
+export interface CategorySpend {
+  category: string;
+  color: string;
+  total: number;
+  count: number;
+  share: number;
+}
+
+export interface BudgetBreach {
+  category: string;
+  limitAmount: number;
+  spent: number;
+  overBy: number;
+  percentage: number;
+  period: string;
+}
+
+export interface SmallExpenseAnalysis {
+  threshold: number;
+  count: number;
+  total: number;
+  shareOfTotal: number;
+  averageAmount: number;
+  /** Proyección al año a este ritmo, no un dato cerrado. */
+  projectedYearly: number;
+  topMerchants: { merchant: string; count: number; total: number }[];
+}
+
+export interface SpendingPattern {
+  merchant: string;
+  category: string;
+  count: number;
+  total: number;
+  averageAmount: number;
+}
+
+export interface UpcomingPayment {
+  kind: "FIXED" | "EVENT";
+  name: string;
+  amount: number;
+  date: string | null;
+  dayOfMonth: number | null;
+  remaining?: number;
+}
+
+export interface Recommendation {
+  priority: "HIGH" | "MEDIUM" | "LOW";
+  title: string;
+  detail: string;
+}
+
+export interface FinancialReport {
+  period: { type: ReportPeriodType; start: string; end: string; label: string };
+  currency: string;
+  totals: {
+    spent: number;
+    transactionCount: number;
+    previousSpent: number;
+    changePercent: number | null;
+  };
+  byCategory: CategorySpend[];
+  byExpenseType: Record<ExpenseType, number>;
+  budgetComparison: {
+    income: number;
+    allocated: number;
+    available: number;
+    fixedBudgeted: number;
+    fixedActual: number;
+    variableBudgeted: number;
+    variableActual: number;
+  } | null;
+  breaches: BudgetBreach[];
+  smallExpenses: SmallExpenseAnalysis;
+  patterns: SpendingPattern[];
+  savings: {
+    netFundFlow: number;
+    currentFundBalance: number;
+    reservedForEvents: number;
+    monthlyFlow: { month: string; net: number }[];
+  };
+  upcomingPayments: UpcomingPayment[];
+  recommendations: Recommendation[];
+}
+
+// ── Calendario financiero de 12 meses ─────────────────────────────────────────
+
+export interface CalendarEvent {
+  id: string;
+  name: string;
+  type: string;
+  date: string;
+  budgetAmount: number;
+  savedAmount: number;
+  remaining: number;
+}
+
+export interface CalendarMonth {
+  year: number;
+  month: number;
+  label: string;
+  estimatedIncome: number;
+  fixedExpenses: number;
+  fundContributions: number;
+  events: CalendarEvent[];
+  eventsTotal: number;
+  totalCommitted: number;
+  projectedBalance: number;
+  tight: boolean;
+}
+
+export interface AnnualCalendar {
+  currency: string;
+  from: { year: number; month: number };
+  months: CalendarMonth[];
+  summary: {
+    annualEventCost: number;
+    alreadyReserved: number;
+    annualEventRemaining: number;
+    /** Reparto a partes iguales de lo que falta, en 12 meses. */
+    flatMonthlyReserve: number;
+    /** Provisión real respetando la fecha de cada evento. */
+    deadlineAwareMonthlyProvision: number;
+    annualFixedCost: number;
+    annualEstimatedIncome: number;
+    tightMonths: string[];
+  };
+}
+
+export const reports = {
+  get: (params: { period: ReportPeriodType; date?: string; smallThreshold?: number }) => {
+    const qs = new URLSearchParams({ period: params.period });
+    if (params.date) qs.set("date", params.date);
+    if (params.smallThreshold != null) qs.set("smallThreshold", String(params.smallThreshold));
+    return request<FinancialReport>(`/api/reports?${qs.toString()}`);
+  },
+  calendar: (year: number, month: number) =>
+    request<AnnualCalendar>(`/api/reports/calendar?year=${year}&month=${month}`),
+};
